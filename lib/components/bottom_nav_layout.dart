@@ -6,7 +6,9 @@ import '../screens/bottom_navi/insights_screen.dart';
 import '../screens/bottom_navi/sound_screen.dart';
 
 class BottomNavLayout extends StatefulWidget {
-  const BottomNavLayout({super.key});
+  final String userName;
+
+  const BottomNavLayout({super.key, required this.userName});
 
   @override
   State<BottomNavLayout> createState() => _BottomNavLayoutState();
@@ -14,18 +16,24 @@ class BottomNavLayout extends StatefulWidget {
 
 class _BottomNavLayoutState extends State<BottomNavLayout> {
   int _currentIndex = 0;
+  late final List<Widget> pages;
 
-  final List<Widget> pages = const [
-    HomeScreen(name: "User"),
-    ExploreScreen(),
-    SoundScreen(),
-    InsightsScreen(),
-    AccountScreen(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    pages = [
+      HomeScreen(name: widget.userName),
+      const ExploreScreen(),
+      const SoundScreen(),
+      const InsightsScreen(),
+      AccountScreen(name: widget.userName),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: IndexedStack(index: _currentIndex, children: pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,

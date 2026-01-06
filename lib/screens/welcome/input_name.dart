@@ -49,9 +49,7 @@ class InputInfo extends StatelessWidget {
 
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => BottomNavLayout(),
-                    ),
+                    MaterialPageRoute(builder: (_) => BottomNavLayout(userName: name,)),
                   );
                 },
                 style: ElevatedButton.styleFrom(
