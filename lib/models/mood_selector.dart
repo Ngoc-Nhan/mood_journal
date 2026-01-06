@@ -69,7 +69,7 @@ class MoodSelector extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,

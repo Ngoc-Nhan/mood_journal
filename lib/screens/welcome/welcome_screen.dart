@@ -25,8 +25,8 @@ class WelcomeScreen extends StatelessWidget {
                   Image.asset(
                     'assets/images/welcome.png',
                     width: double.infinity,
-                    fit: BoxFit.fitWidth,
-                    alignment: Alignment.topCenter,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
                   ),
 
                   // ====== CHỮ NẰM TRONG HÌNH ======
