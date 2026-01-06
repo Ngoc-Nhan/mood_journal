@@ -31,7 +31,7 @@ class WelcomeScreen extends StatelessWidget {
 
                   // ====== CHỮ NẰM TRONG HÌNH ======
                   Positioned(
-                    top: 90, // 👈 chỉnh cao thấp chữ
+                    top: 90, //  chỉnh cao thấp chữ
                     child: Column(
                       children: const [
                         Text(

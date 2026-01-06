@@ -66,7 +66,7 @@ class MoodSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
@@ -76,32 +76,34 @@ class MoodSelector extends StatelessWidget {
         children: moods.asMap().entries.map((entry) {
           final mood = entry.value;
           final index = entry.key;
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => mood.page),
-              );
-            },
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => mood.page),
+                );
+              },
 
-            child: Transform.translate(
-              offset: Offset(0, index.isEven ? -4 : 4),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircleAvatar(
-                    // radius: 22,
-                    backgroundColor: Colors.transparent,
-                    child: Image.asset(
-                      mood.imagePath,
-                      width: 100,
-                      height: 100,
-                      fit: BoxFit.contain,
+              child: Transform.translate(
+                offset: Offset(0, index.isEven ? -4 : 4),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Colors.transparent,
+                      child: Image.asset(
+                        mood.imagePath,
+                        // width: 200,
+                        // height: 200,
+                        fit: BoxFit.contain,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(mood.label, style: const TextStyle(fontSize: 16)),
-                ],
+                    const SizedBox(height: 8),
+                    Text(mood.label, style: const TextStyle(fontSize: 16)),
+                  ],
+                ),
               ),
             ),
           );
