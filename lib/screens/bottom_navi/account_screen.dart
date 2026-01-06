@@ -14,7 +14,7 @@ class AccountScreen extends StatelessWidget {
         children: [
           CommonHeader(
             name: name,
-            showNotification: false, // account thì không cần chuông
+            showNotification: true, // account thì không cần chuông
           ),
 
           const SizedBox(height: 40),
