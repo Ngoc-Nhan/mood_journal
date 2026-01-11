@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../models/mood_selector.dart';
+import '../../components/mood_selector.dart';
 
 class HomeScreen extends StatelessWidget {
   final String name;

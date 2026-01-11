@@ -1,6 +1,6 @@
-import 'package:typewritertext/typewritertext.dart';
+// import 'package:typewritertext/typewritertext.dart';
 import 'package:flutter/material.dart';
-import '../../models/mood_selector.dart';
+import '../../components/mood_selector.dart';
 
 String getGreeting() {
   final hour = DateTime.now().hour;
