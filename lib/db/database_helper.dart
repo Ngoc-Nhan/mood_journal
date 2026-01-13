@@ -32,19 +32,19 @@ class DatabaseHelper {
     CREATE TABLE ${AppConstants.tableNotes} (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
-      content TEXT NOTE NULL,
-      mood_index INTERGER,
+      content TEXT NOT NULL,
+      mood_index INTEGER,
       tags TEXT,
-      color_index INTERGER DEFAULT 0,
-      is_pinned INTERGER DEFAULT 0,
-      is_favorite INTERGER DEFAULT 0,
+      color_index INTEGER DEFAULT 0,
+      is_pinned INTEGER DEFAULT 0,
+      is_favorite INTEGER DEFAULT 0,
       created_at TEXT NOT NULL,
       modified_at TEXT NOT NULL,
       attachments TEXT,
       content_json TEXT,
       ai_response TEXT,
       ai_response_created_at TEXT,
-      is_deleted INTERGER DEFAULT 0,
+      is_deleted INTEGER DEFAULT 0
     )
     ''');
 
@@ -52,7 +52,7 @@ class DatabaseHelper {
     CREATE TABLE ${AppConstants.tableTags} (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
-    color_index INTERGER DEFAULT 0
+    color_index INTEGER DEFAULT 0
     )
     ''');
 
