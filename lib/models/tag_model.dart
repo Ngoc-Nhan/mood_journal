@@ -38,7 +38,7 @@ class TagModel {
     return TagModel(
       id: json['id'],
       name: json['name'],
-      colorIndex: json['colorIndex'] ?? 0,
+      colorIndex: json['color_index'] ?? 0,
     );
   }
 }

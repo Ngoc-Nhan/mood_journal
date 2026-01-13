@@ -3,6 +3,6 @@ class AppConstants {
   static const int databaseVersion = 1;
 
   static const String tableNotes = 'notes';
-  static const String tableNotesTage = 'note_tags';
+  static const String tableNotesTags = 'note_tags';
   static const String tableTags = 'tags';
 }
