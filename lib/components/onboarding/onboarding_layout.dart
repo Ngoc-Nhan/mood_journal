@@ -7,6 +7,8 @@ class OnboardingLayout extends StatelessWidget {
   final String primaryText;
   final VoidCallback? onPrimary;
   final Widget? secondaryButton;
+  final TextStyle? titleStyle;
+  final TextStyle? subtitleStyle;
 
   const OnboardingLayout({
     super.key,
@@ -16,6 +18,8 @@ class OnboardingLayout extends StatelessWidget {
     required this.primaryText,
     required this.onPrimary,
     this.secondaryButton,
+    this.titleStyle,
+    this.subtitleStyle,
   });
 
   @override
@@ -33,9 +37,11 @@ class OnboardingLayout extends StatelessWidget {
               /// TITLE
               Text(
                 title,
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                style: titleStyle??(
+                  TextStyle (
                   fontWeight: FontWeight.bold,
                   fontSize: 40,
+                  )
                 ),
               ),
 

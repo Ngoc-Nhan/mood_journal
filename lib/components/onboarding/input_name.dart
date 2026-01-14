@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mood_journal/components/onboarding/onboarding_layout.dart';
 import 'choice_theme.dart';
 
 class InputInfo extends StatefulWidget {
@@ -29,68 +30,81 @@ class _InputInfoState extends State<InputInfo> {
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => ChoiceTheme(name:name)),
+      MaterialPageRoute(builder: (_) => ChoiceTheme(name: name)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 40),
+    return OnboardingLayout(
+      title: 'Your Personalized Wellness Journey Starts Here',
+      titleStyle: TextStyle(fontSize: 50, fontWeight: FontWeight.w600),
 
-              Text(
-                'Your Personalized Wellness Journey Starts Here',
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  fontSize: 50,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
-              Text(
-                'Let us know your name',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-
-              const SizedBox(height: 34),
-
-              TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  hintText: 'Enter your name',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-
-              const Spacer(),
-
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.pink.shade200,
-                    foregroundColor: Colors.white,
-                  ),
-                  onPressed: () => _onNext(context),
-                  child: const Text(
-                    'Next',
-                    style: TextStyle(fontSize: 18, color: Colors.white),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 26),
-            ],
-          ),
+      subtitle: 'Let us know your name',
+      primaryText: "Next",
+      onPrimary: () => _onNext(context),
+      body: TextField(
+        controller: _nameController,
+        decoration: const InputDecoration(
+          hintText: 'Enter your name',
+          border: OutlineInputBorder(),
         ),
       ),
+
+      // body: SafeArea(
+      //   child: Padding(
+      //     padding: const EdgeInsets.all(32),
+      //     child: Column(
+      //       crossAxisAlignment: CrossAxisAlignment.start,
+      //       children: [
+      //         const SizedBox(height: 40),
+
+      //         Text(
+      //           '',
+      //           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+      //             fontSize: 50,
+      //             fontWeight: FontWeight.bold,
+      //           ),
+      //         ),
+
+      //         const SizedBox(height: 30),
+
+      //         Text(
+      //           'Let us know your name',
+      //           style: Theme.of(context).textTheme.titleLarge,
+      //         ),
+
+      //         const SizedBox(height: 34),
+
+      //         TextField(
+      //           controller: _nameController,
+      //           decoration: const InputDecoration(
+      //             hintText: 'Enter your name',
+      //             border: OutlineInputBorder(),
+      //           ),
+      //         ),
+
+      //         const Spacer(),
+
+      //         SizedBox(
+      //           width: double.infinity,
+      //           height: 50,
+      //           child: ElevatedButton(
+      //             style: ElevatedButton.styleFrom(
+      //               backgroundColor: Colors.pink.shade200,
+      //               foregroundColor: Colors.white,
+      //             ),
+      //             onPressed: () => _onNext(context),
+      //             child: const Text(
+      //               'Next',
+      //               style: TextStyle(fontSize: 18, color: Colors.white),
+      //             ),
+      //           ),
+      //         ),
+      //         const SizedBox(height: 26),
+      //       ],
+      //     ),
+      //   ),
     );
   }
 }
