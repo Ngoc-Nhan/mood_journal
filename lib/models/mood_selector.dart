@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../pages/angry_page.dart';
-import '../pages/excited_pge.dart';
-import '../pages/happy_page.dart';
-import '../pages/nervous_page.dart';
-import '../pages/sad_page.dart';
+// import '../pages/angry_page.dart';
+// import '../pages/excited_pge.dart';
+// import '../pages/happy_page.dart';
+// import '../pages/nervous_page.dart';
+// import '../pages/sad_page.dart';
 
 // dinh nghia model Mood de luu tru thong tin ve tam trang cua nguoi dung
 class Mood {
@@ -11,14 +11,14 @@ class Mood {
   final String label;
   final String imagePath; // assets/images/happy.png
   final double offsetY;
-  final Widget page;
+  // final Widget page;
 
   const Mood({
     required this.id,
     required this.label,
     required this.imagePath,
     this.offsetY = 0.0,
-    required this.page,
+    // required this.page,
   });
 }
 
@@ -30,33 +30,33 @@ const moods = [
     label: 'Sad',
     imagePath: 'assets/images/sad.png',
     offsetY: -4,
-    page: SadPage(),
+    // page: SadPage(),
   ),
   Mood(
     id: 'angry',
     label: 'Angry',
     imagePath: 'assets/images/angry.png',
-    page: AngryPage(),
+    // page: AngryPage(),
   ),
   Mood(
     id: 'excited',
     label: 'Excited',
     imagePath: 'assets/images/excited.png',
     offsetY: -4,
-    page: ExcitedPage(),
+    // page: ExcitedPage(),
   ),
   Mood(
     id: 'nervous',
     label: 'Nervous',
     imagePath: 'assets/images/nervous.png',
-    page: NervousPage(),
+    // page: NervousPage(),
   ),
   Mood(
     id: 'happy',
     label: 'Happy',
     imagePath: 'assets/images/happy.png',
     offsetY: -4,
-    page: HappyPage(),
+    // page: HappyPage(),
   ),
 ];
 
@@ -81,7 +81,7 @@ class MoodSelector extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => mood.page),
+                  MaterialPageRoute(builder: (_) => Placeholder()),
                 );
               },
 

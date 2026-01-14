@@ -63,7 +63,7 @@ class CommonHeader extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(width: 18),
+              const SizedBox(width: 22),
 
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -71,14 +71,14 @@ class CommonHeader extends StatelessWidget {
                   Text(
                     getGreeting(),
                     style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w300,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w400,
                     ),
                   ),
                   Text(
                     'Hello, $name',
                     style: const TextStyle(
-                      fontSize: 18,
+                      fontSize: 22,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

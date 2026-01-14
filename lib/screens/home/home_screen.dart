@@ -20,32 +20,30 @@ class HomeScreen extends StatelessWidget {
           children: [
             CommonHeader(name: name),
 
-            Transform.translate(
-              offset: const Offset(0, -19),
-              child: const MoodSelector(),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              // co lại khi thiếu chỗ fittedbox
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: TypeWriter.text(
-                  'How are you feeling today?',
-                  maxLines: 1,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  duration: const Duration(milliseconds: 50),
-                ),
-              ),
-            ),
-
+            // Transform.translate(
+            //   offset: const Offset(0, -19),
+            //   child: const MoodSelector(),
+            // ),
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(horizontal: 40),
+            //   // co lại khi thiếu chỗ fittedbox
+            //   child: FittedBox(
+            //     fit: BoxFit.scaleDown,
+            //     alignment: Alignment.centerLeft,
+            //     child: TypeWriter.text(
+            //       'How are you feeling today??',
+            //       maxLines: 1,
+            //       style: const TextStyle(
+            //         fontSize: 18,
+            //         fontWeight: FontWeight.w600,
+            //       ),
+            //       duration: const Duration(milliseconds: 50),
+            //     ),
+            //   ),
+            // ),
             const SizedBox(height: 12),
 
-            const ChoiceOption(),
-
+            // const ChoiceOption(),
             const SizedBox(height: 24),
           ],
         ),
