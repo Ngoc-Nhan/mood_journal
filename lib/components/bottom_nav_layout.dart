@@ -22,7 +22,7 @@ class _BottomNavLayoutState extends State<BottomNavLayout> {
   void initState() {
     super.initState();
     pages = [
-      HomeScreen(name: widget.userName),
+      HomeScreen(),
       const ExploreScreen(),
       const SoundScreen(),
       const InsightsScreen(),
@@ -38,7 +38,7 @@ class _BottomNavLayoutState extends State<BottomNavLayout> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (i) => setState(() => _currentIndex = i),
-        type: BottomNavigationBarType.fixed,
+        type: BottomNavigationBarType.shifting,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),

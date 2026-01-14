@@ -46,9 +46,9 @@ class _SetupPageState extends State<SetupPage> {
 
     // Chuyển đến màn hình chính của ứng dụng
     if (mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const Layout()),
-      );
+      // Navigator.of(context).pushReplacement(
+      //   MaterialPageRoute(builder: (context) => const Layout()),
+      // );
     }
   }
 

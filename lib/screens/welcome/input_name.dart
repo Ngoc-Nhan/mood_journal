@@ -52,11 +52,9 @@ class InputInfo extends StatelessWidget {
                     onPressed: () {
                       final name = nameController.text.trim();
                       if (name.isEmpty) return;
-                      Navigator.push(
+                      Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => HomeScreen(name: name),
-                        ),
+                        MaterialPageRoute(builder: (context) => HomeScreen()),
                       );
 
                       // Navigator.pushReplacement(

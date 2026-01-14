@@ -26,11 +26,11 @@ class NoteProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   NoteProvider({required this.repository}) {
-    _loadNotes();
-    _loadTags();
+    loadNotes();
+    loadTags();
   }
 
-  Future<void> _loadNotes() async {
+  Future<void> loadNotes() async {
     _isLoading = true;
     notifyListeners();
     _notes = await repository.getAllNotes();
@@ -38,43 +38,43 @@ class NoteProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _loadTags() async {
+  Future<void> loadTags() async {
     _tags = await repository.getAllTags();
   }
 
   Future<void> createNote(NoteModel note) async {
     await repository.createNote(note);
-    await _loadNotes();
+    await loadNotes();
   }
 
   Future<void> updateNote(NoteModel note) async {
     await repository.updateNote(note);
-    await _loadNotes();
+    await loadNotes();
   }
 
   Future<void> deleteNote(String id) async {
     await repository.deleteNote(id);
-    await _loadNotes();
+    await loadNotes();
   }
 
   Future<void> togglePinNote(String id) async {
     await repository.togglePinNote(id);
-    await _loadNotes();
+    await loadNotes();
   }
 
   Future<void> toggleFavoriteNote(String id) async {
     await repository.toggleFavoriteNote(id);
-    await _loadNotes();
+    await loadNotes();
   }
 
   Future<void> createTag(TagModel tag) async {
     await repository.createTag(tag);
-    await _loadTags();
+    await loadTags();
   }
 
   Future<void> deleteTag(String id) async {
     await repository.deleteTag(id);
-    await _loadTags();
+    await loadTags();
   }
 
   void setSearchQuery(String query) {

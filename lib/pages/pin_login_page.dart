@@ -18,9 +18,9 @@ class _PinLoginPageState extends State<PinLoginPage> {
     final savedPin = await _settingsService.getPin();
     if (savedPin == _pinController.text) {
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const Layout()),
-        );
+        // Navigator.of(context).pushReplacement(
+        //   MaterialPageRoute(builder: (context) => const Layout()),
+        // );
       }
     } else {
       setState(() {

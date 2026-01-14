@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsProvider extends ChangeNotifier {
-  bool _isGridView = false;
+  bool _isGridView = true;
   String _sortOrder = 'date_modified';
 
   bool get isGridView => _isGridView;
