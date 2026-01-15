@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../widgets/common_header.dart';
 
 class AccountScreen extends StatelessWidget {
   final String name;
@@ -12,10 +11,7 @@ class AccountScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          CommonHeader(
-            name: name,
-            showNotification: false, // account thì không cần chuông
-          ),
+          Text('Xin chào'),
 
           const SizedBox(height: 40),
 

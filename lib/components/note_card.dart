@@ -32,65 +32,69 @@ class NoteCard extends StatelessWidget {
         onLongPress: () {
           _showBottomSheet(context);
         },
+
         borderRadius: BorderRadius.circular(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                note.title.isEmpty
-                    ? Container()
-                    : Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Text(
-                            note.title,
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  note.title.isEmpty
+                      ? Container()
+                      : Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Text(
+                              note.title,
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ),
-                      ),
-                if (note.isPinned)
-                  Icon(Icons.push_pin, size: 20, color: Colors.grey),
-                if (note.isFavorite)
-                  Icon(Icons.favorite, size: 20, color: Colors.red),
+                  if (note.isPinned)
+                    Icon(Icons.push_pin, size: 20, color: Colors.grey),
+                  if (note.isFavorite)
+                    Icon(Icons.favorite, size: 20, color: Colors.red),
+                ],
+              ),
+              if (note.content.isNotEmpty) ...[
+                SizedBox(height: 8),
+                Text(
+                  note.content,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  maxLines: 5,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
-            ),
-            if (note.content.isNotEmpty) ...[
+              if (note.tags.isNotEmpty) ...[
+                SizedBox(height: 8),
+                Wrap(
+                  runSpacing: 6,
+                  spacing: 6,
+                  children: note.tags
+                      .take(3)
+                      .map(
+                        (tag) => Chip(
+                          label: Text(tag, style: TextStyle(fontSize: 11)),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
               SizedBox(height: 8),
               Text(
-                note.content,
-                style: Theme.of(context).textTheme.bodyMedium,
-                maxLines: 5,
-                overflow: TextOverflow.ellipsis,
+                DateFormat('MMM dd, yyyy "s hh:mm a').format(note.createdAt),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: _getTextColorForBackground(noteColor),
+                ),
               ),
             ],
-            if (note.tags.isNotEmpty) ...[
-              SizedBox(height: 8),
-              Wrap(
-                runSpacing: 6,
-                spacing: 6,
-                children: note.tags
-                    .take(3)
-                    .map(
-                      (tag) => Chip(
-                        label: Text(tag, style: TextStyle(fontSize: 11)),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    )
-                    .toList(),
-              ),
-            ],
-            SizedBox(height: 8),
-            Text(
-              DateFormat('MMM dd, yyyy " hh:mm a').format(note.createdAt),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: _getTextColorForBackground(noteColor),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

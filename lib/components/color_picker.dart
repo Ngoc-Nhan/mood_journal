@@ -41,10 +41,17 @@ class ColorPickerWidget extends StatelessWidget {
                           : Colors.grey.withValues(alpha: 0.3),
                     ),
                   ),
+                  child: selectedColorIndex == index
+                      ? Icon(
+                          Icons.check,
+                          color: Theme.of(context).colorScheme.primary,
+                        )
+                      : null,
                 ),
               );
             }),
           ),
+          SizedBox(height: 20),
         ],
       ),
     );

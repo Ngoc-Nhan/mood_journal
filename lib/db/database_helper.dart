@@ -36,6 +36,7 @@ class DatabaseHelper {
       mood_index INTEGER,
       tags TEXT,
       color_index INTEGER DEFAULT 0,
+      background_image TEXT, 
       is_pinned INTEGER DEFAULT 0,
       is_favorite INTEGER DEFAULT 0,
       created_at TEXT NOT NULL,

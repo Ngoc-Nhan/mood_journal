@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:mood_journal/components/color_picker.dart';
 import 'package:mood_journal/models/note_model.dart';
 import 'package:mood_journal/providers/note_provider.dart';
 import 'package:mood_journal/theme/app_colors.dart';
@@ -26,6 +27,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   late bool _editMode = widget.editMode;
   late TextEditingController _titleController;
   late TextEditingController _contentController;
+  String? _backgroundImage;
   late int _selectedColorIndex;
   late bool _isFavorite;
   List<String> _tags = [];
@@ -40,6 +42,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
       text: widget.note?.content ?? '',
     );
     _selectedColorIndex = widget.note?.colorIndex ?? 0;
+    _backgroundImage = widget.note?.backgroundImage;
     _isFavorite = widget.note?.isFavorite ?? false;
     _tags = List.from(widget.note?.tags ?? []);
     _attachments = List.from(widget.note?.attachments ?? []);
@@ -54,22 +57,30 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   }
 
   Future<void> _saveNote() async {
+    // 1. Kiểm tra nếu cả tiêu đề và nội dung đều trống thì không lưu
+    if (_titleController.text.trim().isEmpty &&
+        _contentController.text.trim().isEmpty) {
+      Navigator.pop(context);
+      return;
+    }
+
     final noteProvider = Provider.of<NoteProvider>(context, listen: false);
-    if (_titleController.text.isEmpty ||
-        _contentController.text.isEmpty ||
-        _attachments.isEmpty) {
-      final note = NoteModel(
-        id: widget.note?.id ?? Uuid().v4(),
-        title: _titleController.text,
-        content: _contentController.text,
-        colorIndex: _selectedColorIndex,
-        isFavorite: _isFavorite,
-        tags: _tags,
-        isPinned: widget.note?.isPinned ?? false,
-        attachments: _attachments,
-        createdAt: widget.note?.createdAt ?? DateTime.now(),
-        modifiedAt: widget.note?.modifiedAt ?? DateTime.now(),
-      );
+
+    final note = NoteModel(
+      id: widget.note?.id ?? const Uuid().v4(),
+      title: _titleController.text.trim(),
+      content: _contentController.text.trim(),
+      colorIndex: _selectedColorIndex,
+      backgroundImage: _backgroundImage,
+      isFavorite: _isFavorite,
+      tags: _tags,
+      isPinned: widget.note?.isPinned ?? false,
+      attachments: _attachments,
+      createdAt: widget.note?.createdAt ?? DateTime.now(),
+      modifiedAt: DateTime.now(), // Luôn cập nhật thời gian sửa
+    );
+
+    try {
       if (widget.note == null) {
         await noteProvider.createNote(note);
       } else {
@@ -79,6 +90,9 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
       if (mounted) {
         Navigator.pop(context);
       }
+    } catch (e) {
+      // Xử lý lỗi nếu database có vấn đề
+      debugPrint("Error saving note: $e");
     }
   }
 
@@ -204,7 +218,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
 
             if (_attachments.isNotEmpty) ...[
               SizedBox(
-                height: 16,
+                height: 100,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemBuilder: (context, index) {
@@ -219,12 +233,13 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                               width: 100,
                               height: 100,
                               fit: BoxFit.cover,
+                              cacheWidth: 200,
                             ),
                           ),
                           Positioned(
                             top: 4,
                             right: 4,
-                            child: InkWell(
+                            child: GestureDetector(
                               onTap: () {
                                 setState(() {
                                   _attachments.removeAt(index);
@@ -233,13 +248,13 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                               child: Container(
                                 padding: EdgeInsets.all(4),
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: const Color.fromARGB(255, 255, 0, 0),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
                                   Icons.close,
                                   size: 16,
-                                  color: Colors.white,
+                                  color: const Color.fromARGB(255, 255, 0, 0),
                                 ),
                               ),
                             ),
@@ -278,8 +293,70 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   }
 
   void _showColorPicker() {
-    _showModalBottomSheet(
+    showModalBottomSheet(
       context: context,
-    )
+      builder: (context) => ColorPickerWidget(
+        onColorSelected: (index) {
+          setState(() {
+            _selectedColorIndex = index;
+          });
+          Navigator.pop(context);
+        },
+        selectedColorIndex: _selectedColorIndex,
+      ),
+    );
+  }
+
+  void _showOptionsMenu() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(Icons.label_outline),
+              title: Text('Add tag'),
+              onTap: () {
+                Navigator.pop(context);
+                _showAddTagDialog();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAddTagDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Add tag'),
+        content: TextField(
+          controller: _tagController,
+          decoration: InputDecoration(hintText: 'Enter tag name'),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => {Navigator.pop(context)},
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (_tagController.text.isNotEmpty) {
+                setState(() {
+                  _tags.add(_tagController.text);
+                });
+                _tagController.clear();
+              }
+              Navigator.pop(context);
+            },
+            child: Text('Add'),
+          ),
+        ],
+      ),
+    );
   }
 }
