@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mood_journal/screens/home/home_screen.dart';
 import 'package:mood_journal/screens/welcome/welcome_screen.dart';
 
 class SplashScreen extends StatefulWidget {

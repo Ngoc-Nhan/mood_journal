@@ -6,12 +6,10 @@ import 'package:mood_journal/providers/settings_provider.dart';
 import 'package:mood_journal/providers/theme_provider.dart';
 import 'package:mood_journal/repository/note_repository.dart';
 import 'package:mood_journal/screens/home/home_screen.dart';
-import 'package:mood_journal/screens/welcome/welcome_screen.dart';
 import 'package:mood_journal/services/settings_service.dart';
 import 'package:mood_journal/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tz;
-import 'package:mood_journal/screens/welcome/splash_screen.dart';
 
 void main() async {
   // Đảm bảo Flutter đã được khởi tạo
@@ -44,6 +42,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => NoteProvider(repository: NoteRepository()),
         ),
+        // ChangeNotifierProvider(create: (_) => EditorProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {

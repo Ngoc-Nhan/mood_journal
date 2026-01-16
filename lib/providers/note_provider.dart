@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:mood_journal/models/note_model.dart';
 import 'package:mood_journal/models/tag_model.dart';
 import 'package:mood_journal/repository/note_repository.dart';
+import 'package:intl/intl.dart';
 
 class NoteProvider extends ChangeNotifier {
   final NoteRepository repository;
@@ -9,6 +10,29 @@ class NoteProvider extends ChangeNotifier {
   List<TagModel> _tags = [];
   String _searchQuery = '';
   bool _isLoading = false;
+
+  // 1. Thêm hàm Helper để nhóm dữ liệu (có thể để bên ngoài hoặc trong class)
+  Map<String, List<NoteModel>> _groupNotes(List<NoteModel> allNotes) {
+    Map<String, List<NoteModel>> groups = {};
+
+    // Sắp xếp ghi chú mới nhất lên đầu trước khi nhóm
+    allNotes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    for (var note in allNotes) {
+      // Dùng định dạng ngày làm Key (VD: "15/01/2026")
+      String dateKey = DateFormat('dd/MM/yyyy').format(note.createdAt);
+      if (groups[dateKey] == null) groups[dateKey] = [];
+      groups[dateKey]!.add(note);
+    }
+    return groups;
+  }
+
+  // 2. Tạo Getter để UI sử dụng. Nó sẽ tự động nhóm các ghi chú đã được filter (nếu có search)
+  Map<String, List<NoteModel>> get groupedNotes {
+    return _groupNotes(
+      notes,
+    ); // 'notes' ở đây là getter đã lọc theo searchQuery của bạn
+  }
 
   List<NoteModel> get notes {
     List<NoteModel> filteredNotes = _notes;

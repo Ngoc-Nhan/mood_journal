@@ -3,6 +3,8 @@ import 'package:mood_journal/models/promt_template.dart';
 const defaultPrompts = [
   PromptTemplate(
     id: 'my_day',
+    color: '',
+    background: '',
     title: 'My day',
     contents: [
       '🌤️ Hôm nay tôi biết ơn điều gì?',
@@ -12,6 +14,8 @@ const defaultPrompts = [
   ),
   PromptTemplate(
     id: 'thankful',
+    color: '',
+    background: '',
     title: 'Thankful',
     contents: [
       '🙏 Điều gì khiến tôi biết ơn hôm nay?',

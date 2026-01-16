@@ -1,7 +1,9 @@
 // import 'package:typewritertext/typewritertext.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:mood_journal/components/note_card.dart';
+import 'package:mood_journal/components/gridview/note_card.dart';
+import 'package:mood_journal/components/gridview/time_line_grid_group.dart';
+import 'package:mood_journal/components/listview/time_line_group.dart';
 import 'package:mood_journal/models/note_model.dart';
 import 'package:mood_journal/providers/note_provider.dart';
 import 'package:mood_journal/providers/settings_provider.dart';
@@ -111,7 +113,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return BottomAppBar(
       notchMargin: 10,
       elevation: 20,
-      shape: const CircularNotchedRectangle(),
+
+      // shape: const CircularNotchedRectangle(),
       color: Colors.white,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -334,7 +337,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
 
         var notes = noteProvider.notes;
-
+        final groupedNotes = noteProvider.groupedNotes;
         if (notes.isEmpty) {
           return Center(
             child: Column(
@@ -368,60 +371,63 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
         return settings.isGridView
-            ? _buildGridView(notes)
-            : _buildListView(notes);
+            ? _buildGridView(groupedNotes)
+            : _buildListView(groupedNotes);
       },
     );
   }
 
-  Widget _buildGridView(List<NoteModel> notes) {
-    return AnimationLimiter(
-      child: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.85,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        itemCount: notes.length,
-        itemBuilder: (context, index) {
-          final note = notes[index];
-          return AnimationConfiguration.staggeredGrid(
-            position: index,
-            duration: const Duration(milliseconds: 375),
-            columnCount: 2,
-            child: SlideAnimation(
-              child: FadeInAnimation(child: NoteCard(note: notes[index])),
-            ),
-          );
-        },
-      ),
+  Widget _buildGridView(Map<String, List<NoteModel>> groupedData) {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      itemCount: groupedData.length,
+      itemBuilder: (context, index) {
+        String dateKey = groupedData.keys.elementAt(index);
+        List<NoteModel> notesInDay = groupedData[dateKey]!;
+        return TimelineGridGroup(dateKey: dateKey, notes: notesInDay);
+      },
     );
   }
 
-  Widget _buildListView(List<NoteModel> notes) {
-    return AnimationLimiter(
-      child: ListView.builder(
-        padding: EdgeInsets.all(16),
-        itemCount: notes.length,
-        itemBuilder: (context, index) {
-          final note = notes[index];
-          return AnimationConfiguration.staggeredList(
-            position: index,
-            duration: const Duration(milliseconds: 375),
-            child: SlideAnimation(
-              verticalOffset: 50.0,
-              child: FadeInAnimation(
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: 12),
-                  child: NoteCard(note: notes[index]),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
+  Widget _buildListView(Map<String, List<NoteModel>> groupedData) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: groupedData.keys.length,
+      itemBuilder: (context, index) {
+        String dateKey = groupedData.keys.elementAt(index);
+        List<NoteModel> notesInDay = groupedData[dateKey]!;
+
+        return TimelineGroup(
+          // Widget TimelineGroup chúng ta đã viết trước đó
+          dateKey: dateKey,
+          notes: notesInDay,
+        );
+      },
     );
   }
+
+  // Widget _buildListView(List<NoteModel> notes) {
+  //   return AnimationLimiter(
+  //     child: ListView.builder(
+  //       padding: EdgeInsets.all(16),
+  //       itemCount: notes.length,
+  //       itemBuilder: (context, index) {
+  //         final note = notes[index];
+  //         return AnimationConfiguration.staggeredList(
+  //           position: index,
+  //           duration: const Duration(milliseconds: 375),
+  //           child: SlideAnimation(
+  //             verticalOffset: 50.0,
+  //             child: FadeInAnimation(
+  //               child: Padding(
+  //                 padding: EdgeInsets.only(bottom: 12),
+  //                 child: NoteCard(note: notes[index]),
+  //               ),
+  //             ),
+  //           ),
+  //         );
+  //       },
+  //     ),
+  //   );
+  // }
 }

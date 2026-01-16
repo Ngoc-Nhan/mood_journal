@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mood_journal/app.dart';
 import 'package:mood_journal/services/settings_service.dart';
 
 class PinLoginPage extends StatefulWidget {

@@ -1,10 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:mood_journal/components/color_picker.dart';
 import 'package:mood_journal/models/note_model.dart';
 import 'package:mood_journal/providers/note_provider.dart';
+import 'package:mood_journal/screens/note_edit/template_question/tempalte_question.dart';
 import 'package:mood_journal/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
@@ -122,7 +122,9 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         ),
         actions: [
           GestureDetector(
-            onTap: () {},
+            onTap: () {
+              _showColorPicker();
+            },
             child: Container(
               margin: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
               width: 32,
@@ -152,7 +154,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
           IconButton(onPressed: _pickImage, icon: Icon(Icons.image_outlined)),
           IconButton(
             onPressed: () {
-              // _showOptionsMenu,
+              _showOptionsMenu();
             },
             icon: Icon(Icons.more_vert),
           ),
@@ -195,77 +197,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                           style: Theme.of(context).textTheme.headlineMedium,
                         )
                       : const SizedBox.shrink()), // Nếu rỗng thì không hiển thị gì
-            const SizedBox(height: 8),
-            if (_tags.isNotEmpty) ...[
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _tags.map((tag) {
-                  return _editMode
-                      ? Chip(
-                          label: Text(tag),
-                          deleteIcon: Icon(Icons.close),
-                          onDeleted: () {
-                            setState(() {
-                              _tags.remove(tag);
-                            });
-                          },
-                        )
-                      : Chip(label: Text(tag));
-                }).toList(),
-              ),
-            ],
 
-            if (_attachments.isNotEmpty) ...[
-              SizedBox(
-                height: 100,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: EdgeInsetsGeometry.only(right: 8),
-                      child: Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.file(
-                              File(_attachments[index]),
-                              width: 100,
-                              height: 100,
-                              fit: BoxFit.cover,
-                              cacheWidth: 200,
-                            ),
-                          ),
-                          Positioned(
-                            top: 4,
-                            right: 4,
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _attachments.removeAt(index);
-                                });
-                              },
-                              child: Container(
-                                padding: EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: const Color.fromARGB(255, 255, 0, 0),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.close,
-                                  size: 16,
-                                  color: const Color.fromARGB(255, 255, 0, 0),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
             SizedBox(height: 16),
             _editMode
                 ? TextField(
@@ -286,9 +218,140 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                     _contentController.text,
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
+            if (_tags.isNotEmpty) ...[
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _tags.map((tag) {
+                  return _editMode
+                      ? Chip(
+                          label: Text(tag),
+                          deleteIcon: Icon(Icons.close),
+                          onDeleted: () {
+                            setState(() {
+                              _tags.remove(tag);
+                            });
+                          },
+                        )
+                      : Chip(label: Text(tag));
+                }).toList(),
+              ),
+            ],
+            const SizedBox(height: 8),
+            if (_attachments.isNotEmpty) ...[
+              SizedBox(
+                height: 100,
+                width: double.infinity,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _attachments.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: EdgeInsetsGeometry.only(right: 8),
+                      child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              File(_attachments[index]),
+                              width: 100,
+                              height: 100,
+                              fit: BoxFit.cover,
+                              cacheWidth: 200,
+                            ),
+                          ),
+                          _editMode
+                              ? Positioned(
+                                  top: 4,
+                                  right: 4,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _attachments.removeAt(index);
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: const Color.fromARGB(
+                                          71,
+                                          255,
+                                          248,
+                                          248,
+                                        ),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.close,
+                                        size: 16,
+                                        color: const Color.fromARGB(
+                                          255,
+                                          0,
+                                          0,
+                                          0,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : Container(),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ],
         ),
       ),
+      bottomSheet: _buildBottomBar(),
+    );
+  }
+
+  void _goToTemplatePage() async {
+    // Chờ đợi kết quả trả về từ trang Template
+    final String? selectedTemplate = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const TemplateQuestionScreen()),
+    );
+
+    // Nếu có dữ liệu trả về, điền vào TextField
+    if (selectedTemplate != null && mounted) {
+      setState(() {
+        // Thêm vào cuối nội dung hiện tại
+        _contentController.text += "\n$selectedTemplate";
+      });
+    }
+  }
+
+  Widget? _buildBottomBar() {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 250),
+      child: _editMode
+          ? Container(
+              key: const ValueKey('editBar'),
+              height: 60,
+              color: Colors.white,
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      _showColorPicker();
+                    },
+                    icon: const Icon(Icons.image_outlined),
+                  ),
+
+                  IconButton(
+                    icon: Icon(Icons.list_alt_outlined),
+                    onPressed: () {
+                      _goToTemplatePage();
+                    },
+                  ),
+                ],
+              ),
+            )
+          : const SizedBox.shrink(),
     );
   }
 
@@ -322,6 +385,15 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                 _showAddTagDialog();
               },
             ),
+            if (widget.note != null)
+              ListTile(
+                leading: Icon(Icons.delete, color: Colors.red),
+                title: Text('Delete', style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showAddTagDialog();
+                },
+              ),
           ],
         ),
       ),

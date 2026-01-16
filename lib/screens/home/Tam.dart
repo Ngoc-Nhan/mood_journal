@@ -1,7 +1,7 @@
 // import 'package:typewritertext/typewritertext.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:mood_journal/components/note_card.dart';
+import 'package:mood_journal/components/gridview/note_card.dart';
 import 'package:mood_journal/models/note_model.dart';
 import 'package:mood_journal/providers/note_provider.dart';
 import 'package:mood_journal/providers/settings_provider.dart';
@@ -292,7 +292,7 @@ class _HomeScreenState extends State<HomeScreen> {
             color: Colors.white,
             shape: CircularNotchedRectangle(),
             notchMargin: 10,
-            child: Container(
+            child: SizedBox(
               height: 60,
               child: Row(
                 mainAxisSize: MainAxisSize.max,

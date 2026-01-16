@@ -15,8 +15,10 @@ class NoteCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final noteColor = isDark
         ? AppColors.noteColorsDark[note.colorIndex]
-        : Colors.white;
+        : AppColors.noteColors[note.colorIndex];
+    // Hiển thị note
     return Card(
+      margin: EdgeInsets.only(top: 10),
       color: noteColor,
       child: InkWell(
         onTap: () {
@@ -40,6 +42,7 @@ class NoteCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   note.title.isEmpty
                       ? Container()
@@ -55,10 +58,14 @@ class NoteCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                  if (note.isPinned)
-                    Icon(Icons.push_pin, size: 20, color: Colors.grey),
-                  if (note.isFavorite)
-                    Icon(Icons.favorite, size: 20, color: Colors.red),
+                  Row(
+                    children: [
+                      if (note.isPinned)
+                        Icon(Icons.push_pin, size: 20, color: Colors.grey),
+                      if (note.isFavorite)
+                        Icon(Icons.favorite, size: 20, color: Colors.red),
+                    ],
+                  ),
                 ],
               ),
               if (note.content.isNotEmpty) ...[
@@ -88,7 +95,7 @@ class NoteCard extends StatelessWidget {
               ],
               SizedBox(height: 8),
               Text(
-                DateFormat('MMM dd, yyyy "s hh:mm a').format(note.createdAt),
+                DateFormat('hh:mm a').format(note.createdAt),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: _getTextColorForBackground(noteColor),
                 ),
