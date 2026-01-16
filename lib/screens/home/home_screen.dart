@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:mood_journal/components/note_card.dart';
 import 'package:mood_journal/models/note_model.dart';
+import 'package:mood_journal/pages/calendar_screen.dart';
 import 'package:mood_journal/providers/note_provider.dart';
 import 'package:mood_journal/providers/settings_provider.dart';
 import 'package:mood_journal/screens/note_edit/note_edit.dart';
@@ -66,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 0:
         return _buildHomeContent(); // Your original Banner + Notes List
       case 1:
-        return const Center(child: Text("Calendar Screen - Coming Soon"));
+        return const CalendarScreen();
       case 3:
         return const Center(child: Text("Insights Screen - Coming Soon"));
       case 4:
