@@ -15,9 +15,9 @@ A personal mood tracking application built with Flutter. Keep track of your dail
 
 ## 📸 Screenshots
 
-|        Home Screen         |         Add Entry          |         Statistics         |
-| :------------------------: | :------------------------: | :------------------------: |
-| <!-- Insert Image Here --> | <!-- Insert Image Here --> | <!-- Insert Image Here --> |
+|       Home Screen        |         Add Entry          |         Statistics         |
+| :----------------------: | :------------------------: | :------------------------: |
+| ![alt](./flutter_01.png) | <!-- Insert Image Here --> | <!-- Insert Image Here --> |
 
 ## 🚀 Getting Started
 

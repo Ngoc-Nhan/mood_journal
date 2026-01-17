@@ -104,7 +104,7 @@ class _BuildNoteDetailState extends State<BuildNoteDetail> {
                           padding: const EdgeInsets.only(bottom: 5),
                           child: Text(
                             widget.note.title,
-                            style: Theme.of(context).textTheme.titleLarge
+                            style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.bold),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

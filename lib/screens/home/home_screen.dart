@@ -213,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   child: CircleAvatar(
-                    backgroundImage: AssetImage('assets/images/welcome.png'),
+                    backgroundImage: AssetImage('assets/images/welcome_1.png'),
                   ),
                 ),
                 const SizedBox(width: 10),

@@ -111,7 +111,7 @@ class NoteCard extends StatelessWidget {
               ],
               SizedBox(height: 8),
               Text(
-                DateFormat('hh:mm a').format(note.createdAt),
+                DateFormat('HH:mm').format(note.createdAt),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: _getTextColorForBackground(noteColor),
                 ),

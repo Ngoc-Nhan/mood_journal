@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mood_journal/components/onboarding/start_screen.dart';
 import 'package:mood_journal/db/database_helper.dart';
 import 'package:mood_journal/providers/note_provider.dart';
 import 'package:mood_journal/providers/settings_provider.dart';
 import 'package:mood_journal/providers/theme_provider.dart';
 import 'package:mood_journal/repository/note_repository.dart';
 import 'package:mood_journal/screens/home/home_screen.dart';
+// import 'package:mood_journal/screens/home/home_screen.dart';
 import 'package:mood_journal/services/settings_service.dart';
 import 'package:mood_journal/theme/app_theme.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
 
 void main() async {
@@ -16,7 +19,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   tz.initializeTimeZones();
   await DatabaseHelper.instance.database;
+  final prefs = await SharedPreferences.getInstance();
 
+  // Mặc định là true nếu chưa từng lưu giá trị này (lần đầu cài app)
+  final bool showOnboarding = prefs.getBool('showOnboarding') ?? true;
   // Khởi tạo service
   final settingsService = SettingsService();
   // Kiểm tra xem PIN có tồn tại không
@@ -26,12 +32,13 @@ void main() async {
     SystemUiOverlayStyle(statusBarColor: Colors.transparent),
   );
 
-  runApp(MyApp(hasPin: hasPin));
+  runApp(MyApp(showOnboarding: showOnboarding, hasPin: hasPin));
 }
 
 class MyApp extends StatelessWidget {
+  final bool showOnboarding;
   final bool hasPin;
-  const MyApp({super.key, required this.hasPin});
+  const MyApp({super.key, required this.showOnboarding, required this.hasPin});
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +60,7 @@ class MyApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.themeMode,
-            home: const HomeScreen(),
+            home: showOnboarding ? const WelcomeScreen() : const HomeScreen(),
             // Quyết định màn hình đầu tiên dựa trên việc có PIN hay không
             // home: hasPin ? const PinLoginPage() : const SetupPage(),
           );

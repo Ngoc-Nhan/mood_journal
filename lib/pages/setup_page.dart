@@ -17,7 +17,7 @@ class _SetupPageState extends State<SetupPage> {
   final List<String> _themeImages = [
     'assets/images/tree.png',
     'assets/images/banner.png',
-    'assets/images/welcome.png',
+    'assets/images/welcome_1.png',
   ];
   String? _selectedTheme;
 

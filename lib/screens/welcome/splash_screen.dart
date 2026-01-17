@@ -69,7 +69,7 @@ class _SplashScreenState extends State<SplashScreen>
                   children: [
                     // ====== ẢNH NỀN ======
                     Image.asset(
-                      'assets/images/welcome.png',
+                      'assets/images/welcome_1.png',
                       width: double.infinity,
                       fit: BoxFit.cover,
                       alignment: Alignment.center,
