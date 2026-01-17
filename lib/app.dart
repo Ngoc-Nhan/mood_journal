@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mood_journal/screens/home/home_screen.dart';
+import 'package:mood_journal/screens/bottom_navi/insights_screen.dart';
+import 'package:mood_journal/screens/bottom_navi/account_screen.dart';
 
 class Layout extends StatefulWidget {
   const Layout({super.key});
@@ -20,13 +22,19 @@ class _App extends State<Layout> {
     HomeScreen(name: 'Van Huynh'),
     Container(child: Text('Explore')),
     Container(child: Text('Sound')),
-    Container(child: Text('Insight')),
-    Container(child: Text('Account')),
+    InsightsScreen(),
+    AccountScreen(name:'Van Huynh'),
   ];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(child: _pages[_selectedIndex]),
+      body: SafeArea(
+        child: IndexedStack(
+          index: _selectedIndex,
+          children: _pages,
+        ),
+      ),
+
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         onTap: _navigateBottom,

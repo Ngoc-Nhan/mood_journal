@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:mood_journal/app.dart';
 // import 'screens/welcome/welcome_screen.dart';
 import 'package:device_preview/device_preview.dart';
+import 'screens/bottom_navi/insights_screen.dart';
+
 
 void main() {
   runApp(
