@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:intl/intl.dart';
 import 'package:mood_journal/components/gridview/note_card.dart';
 import 'package:mood_journal/components/listview/build_note_detail.dart';
@@ -51,20 +52,32 @@ class TimelineGridGroup extends StatelessWidget {
           const SizedBox(height: 12),
 
           // 🧩 GRID NOTES TRONG NGÀY
-          GridView.builder(
-            shrinkWrap: true,
+          // GridView.builder(
+          //   shrinkWrap: true,
+          //   physics: const NeverScrollableScrollPhysics(),
+          //   itemCount: notes.length,
+          //   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          //     crossAxisCount: 2,
+          //     mainAxisSpacing: 10,
+          //     crossAxisSpacing: 10,
+          //     childAspectRatio: 0.85,
+          //   ),
+          //   itemBuilder: (context, index) {
+          //     return NoteCard(note: notes[index]);
+          //   },
+          // ),
+          MasonryGridView.count(
+            crossAxisCount: 2,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            shrinkWrap: true, // ⚠️ BẮT BUỘC
             physics: const NeverScrollableScrollPhysics(),
             itemCount: notes.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              childAspectRatio: 0.85,
-            ),
             itemBuilder: (context, index) {
               return NoteCard(note: notes[index]);
             },
           ),
+          const SizedBox(height: 12),
         ],
       ),
     );

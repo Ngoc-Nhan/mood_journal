@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mood_journal/constants/mood_default.dart';
 import 'package:mood_journal/models/note_model.dart';
 import 'package:mood_journal/providers/note_provider.dart';
 import 'package:mood_journal/screens/note_edit/note_edit.dart';
@@ -88,14 +89,10 @@ class _BuildNoteDetailState extends State<BuildNoteDetail> {
                   const SizedBox(height: 6),
                   // Mood Icon (Hiện tại là hình tròn xám theo ảnh)
                   widget.note.moodIndex != null
-                      ? Container(
-                          padding: EdgeInsets.only(bottom: 8),
-                          width: 22,
-                          height: 22,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[300],
-                            shape: BoxShape.circle,
-                          ),
+                      ? Icon(
+                          moodIcons[widget.note.moodIndex!],
+                          size: 30,
+                          color: Colors.black54,
                         )
                       : Container(),
 
@@ -124,8 +121,8 @@ class _BuildNoteDetailState extends State<BuildNoteDetail> {
                   if (widget.note.tags.isNotEmpty) ...[
                     SizedBox(height: 8),
                     Wrap(
-                      runSpacing: 6,
-                      spacing: 6,
+                      runSpacing: 0,
+                      spacing: 2,
                       children: widget.note.tags
                           .take(3)
                           .map(
@@ -136,6 +133,14 @@ class _BuildNoteDetailState extends State<BuildNoteDetail> {
                           )
                           .toList(),
                     ),
+                    if (widget.note.tags.length > 3)
+                      Chip(
+                        label: Text(
+                          '+${widget.note.tags.length - 2}',
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                        visualDensity: VisualDensity.compact,
+                      ),
                   ],
                 ],
               ),

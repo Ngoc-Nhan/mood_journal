@@ -1,11 +1,14 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:mood_journal/components/color_picker.dart';
+import 'package:mood_journal/constants/mood_default.dart';
 import 'package:mood_journal/models/note_model.dart';
 import 'package:mood_journal/providers/note_provider.dart';
 import 'package:mood_journal/screens/note_edit/template_question/tempalte_question.dart';
 import 'package:mood_journal/theme/app_colors.dart';
+import 'package:popover/popover.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:image_picker/image_picker.dart';
@@ -27,6 +30,8 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   late bool _editMode = widget.editMode;
   late TextEditingController _titleController;
   late TextEditingController _contentController;
+  int? _selectedMood;
+  late DateTime _selectedDate;
   String? _backgroundImage;
   late int _selectedColorIndex;
   late bool _isFavorite;
@@ -41,6 +46,9 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     _contentController = TextEditingController(
       text: widget.note?.content ?? '',
     );
+    _selectedMood = widget.note?.moodIndex;
+    _selectedDate = widget.note?.modifiedAt ?? DateTime.now();
+    _backgroundImage = widget.note?.backgroundImage;
     _selectedColorIndex = widget.note?.colorIndex ?? 0;
     _backgroundImage = widget.note?.backgroundImage;
     _isFavorite = widget.note?.isFavorite ?? false;
@@ -70,14 +78,15 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
       id: widget.note?.id ?? const Uuid().v4(),
       title: _titleController.text.trim(),
       content: _contentController.text.trim(),
+      moodIndex: _selectedMood,
       colorIndex: _selectedColorIndex,
       backgroundImage: _backgroundImage,
       isFavorite: _isFavorite,
       tags: _tags,
       isPinned: widget.note?.isPinned ?? false,
       attachments: _attachments,
-      createdAt: widget.note?.createdAt ?? DateTime.now(),
-      modifiedAt: DateTime.now(), // Luôn cập nhật thời gian sửa
+      createdAt: _selectedDate,
+      modifiedAt: _selectedDate, // Luôn cập nhật thời gian sửa
     );
 
     try {
@@ -108,11 +117,8 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final noteColor = isDark
-        ? AppColors.noteColorsDark[_selectedColorIndex]
-        : AppColors.noteColors[_selectedColorIndex];
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         leading: IconButton(
           onPressed: () async {
@@ -121,25 +127,11 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
           icon: Icon(Icons.arrow_back),
         ),
         actions: [
-          GestureDetector(
-            onTap: () {
-              _showColorPicker();
+          IconButton(
+            onPressed: () {
+              _showAIResultPopup(context, _contentController.text.trim());
             },
-            child: Container(
-              margin: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(100),
-                color: noteColor,
-                border: Border.all(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.outline.withValues(alpha: 0.5),
-                  width: 2,
-                ),
-              ),
-            ),
+            icon: Icon(Icons.message),
           ),
           IconButton(
             onPressed: () {
@@ -151,7 +143,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                 ? Icon(Icons.favorite)
                 : Icon(Icons.favorite_border),
           ),
-          IconButton(onPressed: _pickImage, icon: Icon(Icons.image_outlined)),
+          // IconButton(onPressed: _pickImage, icon: Icon(Icons.image_outlined)),
           IconButton(
             onPressed: () {
               _showOptionsMenu();
@@ -174,6 +166,49 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (_backgroundImage != null) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.asset(
+                  _backgroundImage!,
+                  width: double.infinity,
+                  height: 200,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ],
+            // Display date
+            _editMode
+                ? GestureDetector(
+                    onTap: _pickDateTime,
+                    child: Row(
+                      children: [
+                        Text(
+                          DateFormat(
+                            "d 'thg' M,  yyyy, HH:mm",
+                          ).format(_selectedDate),
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.keyboard_arrow_down, size: 18),
+                      ],
+                    ),
+                  )
+                : Text(
+                    DateFormat("d 'thg' M,  yyyy, HH:mm").format(_selectedDate),
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+
+            //mood selecter
+            // Trong Column của build()
+            _editMode
+                ? _buildMoodPicker(context) // Chế độ chỉnh sửa: Có thể nhấn
+                : _selectedMood != null
+                ? _buildMoodDisplay()
+                : const SizedBox.shrink(), // Chế độ xem: Chỉ hiện icon
+
+            const SizedBox(height: 16),
+            // const SizedBox(height: 16),
             _editMode
                 ? TextField(
                     controller: _titleController,
@@ -309,6 +344,83 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     );
   }
 
+  Widget _buildMoodDisplay() {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Icon(
+        // Mặc định là icon neutral nếu moodIndex chưa được chọn (null)
+        moodIcons[widget.note?.moodIndex ?? _selectedMood ?? 2],
+        size: 30,
+        color: Colors.black54,
+      ),
+    );
+  }
+
+  Widget _buildMoodPicker(BuildContext context) {
+    return Builder(
+      builder: (context) {
+        return GestureDetector(
+          onTap: () {
+            showPopover(
+              context: context,
+              direction: PopoverDirection.bottom,
+              width: 300,
+              height: 100,
+              arrowHeight: 10,
+              backgroundColor: Colors.white,
+              bodyBuilder: (context) => Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      "Your mood in this moment?",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: List.generate(moodIcons.length, (index) {
+                      return IconButton(
+                        icon: Icon(
+                          moodIcons[index],
+                          color: _selectedMood == index
+                              ? Colors.blue
+                              : Colors.black54,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _selectedMood = index;
+                          });
+                          Navigator.pop(context);
+                        },
+                      );
+                    }),
+                  ),
+                ],
+              ),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8E0E0), // Màu hồng nhạt như ảnh mẫu
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              moodIcons[_selectedMood ?? 2], // Hiển thị mood đang chọn
+              size: 30,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _goToTemplatePage() async {
     // Chờ đợi kết quả trả về từ trang Template
     final String? selectedTemplate = await Navigator.push(
@@ -326,6 +438,10 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   }
 
   Widget? _buildBottomBar() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final noteColor = isDark
+        ? AppColors.noteColorsDark[_selectedColorIndex]
+        : AppColors.noteColors[_selectedColorIndex];
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 250),
       child: _editMode
@@ -334,19 +450,44 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
               height: 60,
               color: Colors.white,
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   IconButton(
-                    onPressed: () {
-                      _showColorPicker();
-                    },
-                    icon: const Icon(Icons.image_outlined),
-                  ),
-
-                  IconButton(
-                    icon: Icon(Icons.list_alt_outlined),
+                    icon: Icon(Icons.lightbulb),
                     onPressed: () {
                       _goToTemplatePage();
                     },
+                  ),
+                  // IconButton(
+                  //   onPressed: () {
+                  //     _showColorPicker();
+                  //   },
+                  //   icon: const Icon(Icons.image_outlined),
+                  // ),
+                  IconButton(
+                    onPressed: _pickImage,
+                    icon: Icon(Icons.image_outlined),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      _showColorPicker();
+                    },
+                    child: Container(
+                      margin: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(100),
+                        color: noteColor,
+                        border: Border.all(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.outline.withValues(alpha: 0.5),
+                          width: 2,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -429,6 +570,162 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _pickDateTime() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+
+    if (date == null) return;
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_selectedDate),
+    );
+
+    if (time == null) return;
+
+    setState(() {
+      _selectedDate = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
+    });
+  }
+
+  // void _showIconResponeDialog(BuildContext context) {
+  void _showAIResultPopup(BuildContext context, String response) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              children: [
+                // Ảnh minh họa phía trên (Sliver-like)
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
+                  child: Image.asset(
+                    'assets/images/bear.png', // Thay bằng ảnh của bạn
+                    height: 150,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: const CircleAvatar(
+                      backgroundColor: Colors.black26,
+                      child: Icon(Icons.close, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Avatar nhân vật AI
+                  Image.asset('assets/images/shinba.png', width: 50),
+                  const SizedBox(width: 12),
+                  // Nội dung phản hồi
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Liptwo",
+                          style: TextStyle(
+                            color: Colors.redAccent,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          response,
+                          style: const TextStyle(fontSize: 14, height: 1.4),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showMoodPicker() {
+    showAboutDialog(
+      context: context,
+      // backgroundColor: Colors.transparent,
+      children: [
+        Center(
+          child: Container(
+            width: 300,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Your mood in this moment?",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: List.generate(5, (index) {
+                    final icons = [
+                      Icons.sentiment_very_dissatisfied,
+                      Icons.sentiment_dissatisfied,
+                      Icons.sentiment_neutral,
+                      Icons.sentiment_satisfied,
+                      Icons.sentiment_very_satisfied,
+                    ];
+
+                    return IconButton(
+                      icon: Icon(
+                        icons[index],
+                        size: 28,
+                        color: _selectedMood == index
+                            ? Colors.orange
+                            : Colors.grey,
+                      ),
+                      onPressed: () {
+                        setState(() => _selectedMood = index);
+                        Navigator.pop(context);
+                      },
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

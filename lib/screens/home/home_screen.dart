@@ -1,6 +1,8 @@
 // import 'package:typewritertext/typewritertext.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:intl/intl.dart';
 import 'package:mood_journal/components/gridview/note_card.dart';
 import 'package:mood_journal/components/gridview/time_line_grid_group.dart';
 import 'package:mood_journal/components/listview/time_line_group.dart';
@@ -377,15 +379,67 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Widget _buildGridView(Map<String, List<NoteModel>> groupedData) {
+  //   return ListView.builder(
+  //     padding: const EdgeInsets.symmetric(horizontal: 12),
+  //     itemCount: groupedData.length,
+  //     itemBuilder: (context, index) {
+  //       String dateKey = groupedData.keys.elementAt(index);
+  //       List<NoteModel> notesInDay = groupedData[dateKey]!;
+  //       return TimelineGridGroup(dateKey: dateKey, notes: notesInDay);
+  //     },
+  //   );
+  // }
   Widget _buildGridView(Map<String, List<NoteModel>> groupedData) {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      itemCount: groupedData.length,
-      itemBuilder: (context, index) {
-        String dateKey = groupedData.keys.elementAt(index);
-        List<NoteModel> notesInDay = groupedData[dateKey]!;
-        return TimelineGridGroup(dateKey: dateKey, notes: notesInDay);
-      },
+    return CustomScrollView(
+      slivers: groupedData.entries.map((entry) {
+        final dateKey = entry.key;
+        final notes = entry.value;
+
+        final parsedDate = DateFormat('dd/MM/yyyy').parse(dateKey);
+
+        return SliverMainAxisGroup(
+          slivers: [
+            // ===== HEADER NGÀY =====
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
+                child: Row(
+                  spacing: 5,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      DateFormat('dd').format(parsedDate),
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'thg ${parsedDate.month} ${parsedDate.year}',
+                      style: const TextStyle(fontSize: 15),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // ===== GRID NOTE =====
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              sliver: SliverMasonryGrid.count(
+                crossAxisCount: 2,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                childCount: notes.length,
+                itemBuilder: (context, index) {
+                  return NoteCard(note: notes[index]);
+                },
+              ),
+            ),
+          ],
+        );
+      }).toList(),
     );
   }
 

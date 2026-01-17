@@ -19,6 +19,10 @@ class NoteCard extends StatelessWidget {
     // Hiển thị note
     return Card(
       margin: EdgeInsets.only(top: 10),
+
+      // clipBehavior: Clip.antiAlias,
+      // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      // elevation: 0,
       color: noteColor,
       child: InkWell(
         onTap: () {
@@ -48,10 +52,10 @@ class NoteCard extends StatelessWidget {
                       ? Container()
                       : Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(6),
                             child: Text(
                               note.title,
-                              style: Theme.of(context).textTheme.titleLarge
+                              style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(fontWeight: FontWeight.bold),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -69,7 +73,7 @@ class NoteCard extends StatelessWidget {
                 ],
               ),
               if (note.content.isNotEmpty) ...[
-                SizedBox(height: 8),
+                // SizedBox(height: 8),
                 Text(
                   note.content,
                   style: Theme.of(context).textTheme.bodyMedium,
@@ -78,19 +82,31 @@ class NoteCard extends StatelessWidget {
                 ),
               ],
               if (note.tags.isNotEmpty) ...[
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Wrap(
-                  runSpacing: 6,
                   spacing: 6,
-                  children: note.tags
-                      .take(3)
-                      .map(
-                        (tag) => Chip(
-                          label: Text(tag, style: TextStyle(fontSize: 11)),
-                          visualDensity: VisualDensity.compact,
+                  // runSpacing: 6,
+                  children: [
+                    ...note.tags
+                        .take(2)
+                        .map(
+                          (tag) => Chip(
+                            label: Text(
+                              tag,
+                              style: const TextStyle(fontSize: 11),
+                            ),
+                            visualDensity: VisualDensity.compact,
+                          ),
                         ),
-                      )
-                      .toList(),
+                    if (note.tags.length > 2)
+                      Chip(
+                        label: Text(
+                          '+${note.tags.length - 2}',
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                  ],
                 ),
               ],
               SizedBox(height: 8),
@@ -100,6 +116,7 @@ class NoteCard extends StatelessWidget {
                   color: _getTextColorForBackground(noteColor),
                 ),
               ),
+              SizedBox(height: 8),
             ],
           ),
         ),
