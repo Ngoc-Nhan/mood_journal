@@ -37,6 +37,9 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   late bool _isFavorite;
   List<String> _tags = [];
   List<String> _attachments = [];
+  String? _aiResponse;
+  DateTime? _aiResponseCreatedAt;
+  bool _isSaving = false;
   final _tagController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   @override
@@ -54,6 +57,8 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     _isFavorite = widget.note?.isFavorite ?? false;
     _tags = List.from(widget.note?.tags ?? []);
     _attachments = List.from(widget.note?.attachments ?? []);
+    _aiResponse = widget.note?.aiResponse;
+    _aiResponseCreatedAt = widget.note?.aiResponseCreatedAt;
   }
 
   @override
@@ -71,33 +76,73 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
       Navigator.pop(context);
       return;
     }
-
+    setState(() {
+      _isSaving = true;
+      _editMode = false;
+    });
     final noteProvider = Provider.of<NoteProvider>(context, listen: false);
 
-    final note = NoteModel(
-      id: widget.note?.id ?? const Uuid().v4(),
-      title: _titleController.text.trim(),
-      content: _contentController.text.trim(),
-      moodIndex: _selectedMood,
-      colorIndex: _selectedColorIndex,
-      backgroundImage: _backgroundImage,
-      isFavorite: _isFavorite,
-      tags: _tags,
-      isPinned: widget.note?.isPinned ?? false,
-      attachments: _attachments,
-      createdAt: _selectedDate,
-      modifiedAt: _selectedDate, // Luôn cập nhật thời gian sửa
-    );
+    // final note = NoteModel(
+    //   id: widget.note?.id ?? const Uuid().v4(),
+    //   title: _titleController.text.trim(),
+    //   content: _contentController.text.trim(),
+    //   moodIndex: _selectedMood,
+    //   colorIndex: _selectedColorIndex,
+    //   backgroundImage: _backgroundImage,
+    //   isFavorite: _isFavorite,
+    //   tags: _tags,
+    //   isPinned: widget.note?.isPinned ?? false,
+    //   attachments: _attachments,
+    //   createdAt: _selectedDate,
+    //   modifiedAt: _selectedDate, // Luôn cập nhật thời gian sửa
+    // );
 
     try {
+      if (widget.note == null && _isSaving) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) =>
+              const Center(child: CircularProgressIndicator()),
+        );
+
+        // 1. Gọi SDK để lấy phản hồi AI
+        await noteProvider.generateAIAdvice(_contentController.text.trim());
+
+        if (mounted) {
+          Navigator.pop(context); // Tắt Loading
+
+          // 2. Lấy dữ liệu từ Provider sau khi gọi xong
+          _aiResponse = noteProvider.lastAIResponse;
+          if (_aiResponse != null) {
+            _aiResponseCreatedAt =
+                DateTime.now(); // Ghi nhận thời gian tạo AI response
+            _showAIResultPopup(context, _aiResponse!);
+          }
+        }
+      }
+      final note = NoteModel(
+        id: widget.note?.id ?? const Uuid().v4(),
+        title: _titleController.text.trim(),
+        content: _contentController.text.trim(),
+        moodIndex: _selectedMood,
+        colorIndex: _selectedColorIndex,
+        backgroundImage: _backgroundImage,
+        isFavorite: _isFavorite,
+        tags: _tags,
+        isPinned: widget.note?.isPinned ?? false,
+        attachments: _attachments,
+        createdAt: _selectedDate,
+        modifiedAt: _selectedDate,
+        // Gán giá trị AI vào đây để lưu xuống DB
+        aiResponse: _aiResponse ?? widget.note?.aiResponse,
+        aiResponseCreatedAt:
+            _aiResponseCreatedAt ?? widget.note?.aiResponseCreatedAt,
+      );
       if (widget.note == null) {
         await noteProvider.createNote(note);
       } else {
         await noteProvider.updateNote(note);
-      }
-
-      if (mounted) {
-        Navigator.pop(context);
       }
     } catch (e) {
       // Xử lý lỗi nếu database có vấn đề
@@ -122,14 +167,18 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
       appBar: AppBar(
         leading: IconButton(
           onPressed: () async {
-            await _saveNote();
+            _editMode ? {await _saveNote()} : Navigator.pop(context);
           },
           icon: Icon(Icons.arrow_back),
         ),
         actions: [
           IconButton(
             onPressed: () {
-              _showAIResultPopup(context, _contentController.text.trim());
+              _showAIResultPopup(
+                context,
+                widget.note?.aiResponse ??
+                    'Mình luôn lắm nghe, hãy viết thêm nhiều nhé',
+              );
             },
             icon: Icon(Icons.message),
           ),
@@ -156,6 +205,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
               setState(() {
                 _editMode = !_editMode;
               });
+              _editMode ? null : _saveNote();
             },
             icon: Icon(_editMode ? Icons.save : Icons.edit),
           ),
@@ -511,6 +561,32 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     );
   }
 
+  void _showDeleteConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Note'),
+        content: Text('Are you sure you want to delete this note?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Provider.of<NoteProvider>(
+                context,
+                listen: false,
+              ).deleteNote(widget.note?.id ?? '');
+            },
+            child: Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showOptionsMenu() {
     showModalBottomSheet(
       context: context,
@@ -532,7 +608,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                 title: Text('Delete', style: TextStyle(color: Colors.red)),
                 onTap: () {
                   Navigator.pop(context);
-                  _showAddTagDialog();
+                  _showDeleteConfirmationDialog(context);
                 },
               ),
           ],
@@ -628,7 +704,9 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                   right: 8,
                   top: 8,
                   child: GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
                     child: const CircleAvatar(
                       backgroundColor: Colors.black26,
                       child: Icon(Icons.close, color: Colors.white),
@@ -643,20 +721,24 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Avatar nhân vật AI
-                  Image.asset('assets/images/shinba.png', width: 50),
+                  Column(
+                    children: [
+                      const Text(
+                        "Liptwo",
+                        style: TextStyle(
+                          color: Colors.redAccent,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Image.asset('assets/images/shinba.png', width: 50),
+                    ],
+                  ),
                   const SizedBox(width: 12),
                   // Nội dung phản hồi
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          "Liptwo",
-                          style: TextStyle(
-                            color: Colors.redAccent,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
                         const SizedBox(height: 4),
                         Text(
                           response,
@@ -674,58 +756,58 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     );
   }
 
-  void _showMoodPicker() {
-    showAboutDialog(
-      context: context,
-      // backgroundColor: Colors.transparent,
-      children: [
-        Center(
-          child: Container(
-            width: 300,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  "Your mood in this moment?",
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: List.generate(5, (index) {
-                    final icons = [
-                      Icons.sentiment_very_dissatisfied,
-                      Icons.sentiment_dissatisfied,
-                      Icons.sentiment_neutral,
-                      Icons.sentiment_satisfied,
-                      Icons.sentiment_very_satisfied,
-                    ];
+  // void _showMoodPicker() {
+  //   showAboutDialog(
+  //     context: context,
+  //     // backgroundColor: Colors.transparent,
+  //     children: [
+  //       Center(
+  //         child: Container(
+  //           width: 300,
+  //           padding: const EdgeInsets.all(16),
+  //           decoration: BoxDecoration(
+  //             color: Colors.white,
+  //             borderRadius: BorderRadius.circular(16),
+  //           ),
+  //           child: Column(
+  //             mainAxisSize: MainAxisSize.min,
+  //             children: [
+  //               const Text(
+  //                 "Your mood in this moment?",
+  //                 style: TextStyle(fontWeight: FontWeight.bold),
+  //               ),
+  //               const SizedBox(height: 12),
+  //               Row(
+  //                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //                 children: List.generate(5, (index) {
+  //                   final icons = [
+  //                     Icons.sentiment_very_dissatisfied,
+  //                     Icons.sentiment_dissatisfied,
+  //                     Icons.sentiment_neutral,
+  //                     Icons.sentiment_satisfied,
+  //                     Icons.sentiment_very_satisfied,
+  //                   ];
 
-                    return IconButton(
-                      icon: Icon(
-                        icons[index],
-                        size: 28,
-                        color: _selectedMood == index
-                            ? Colors.orange
-                            : Colors.grey,
-                      ),
-                      onPressed: () {
-                        setState(() => _selectedMood = index);
-                        Navigator.pop(context);
-                      },
-                    );
-                  }),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  //                   return IconButton(
+  //                     icon: Icon(
+  //                       icons[index],
+  //                       size: 28,
+  //                       color: _selectedMood == index
+  //                           ? Colors.orange
+  //                           : Colors.grey,
+  //                     ),
+  //                     onPressed: () {
+  //                       setState(() => _selectedMood = index);
+  //                       Navigator.pop(context);
+  //                     },
+  //                   );
+  //                 }),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 }

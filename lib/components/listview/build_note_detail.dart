@@ -163,10 +163,13 @@ class _BuildNoteDetailState extends State<BuildNoteDetail> {
             child: Text('Cancel'),
           ),
           TextButton(
-            onPressed: () => Provider.of<NoteProvider>(
-              context,
-              listen: false,
-            ).deleteNote(widget.note.id!),
+            onPressed: () {
+              Navigator.pop(context);
+              Provider.of<NoteProvider>(
+                context,
+                listen: false,
+              ).deleteNote(widget.note.id!);
+            },
             child: Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
