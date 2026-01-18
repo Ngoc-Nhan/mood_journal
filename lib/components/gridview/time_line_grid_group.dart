@@ -20,7 +20,16 @@ class TimelineGridGroup extends StatelessWidget {
     final parsedDate = DateFormat('dd/MM/yyyy').parse(dateKey);
     final day = DateFormat('dd').format(parsedDate);
     final monthYear = "thg ${parsedDate.month} ${parsedDate.year}";
-
+    notes.sort((a, b) {
+      if (a.isPinned && !b.isPinned) {
+        return -1; // a comes first
+      } else if (!a.isPinned && b.isPinned) {
+        return 1; // b comes first
+      } else {
+        // Both are pinned or both are unpinned, sort by date
+        return b.createdAt.compareTo(a.createdAt);
+      }
+    });
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(

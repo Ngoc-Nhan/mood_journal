@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:mood_journal/models/note_model.dart';
 import 'package:mood_journal/models/tag_model.dart';
 import 'package:mood_journal/repository/note_repository.dart';
 import 'package:intl/intl.dart';
+import 'dart:math';
 
 class NoteProvider extends ChangeNotifier {
   final NoteRepository repository;
@@ -29,8 +29,9 @@ class NoteProvider extends ChangeNotifier {
     try {
       // 1. Khởi tạo Model (Sử dụng gemini-1.5-flash để phản hồi nhanh)
       final model = GenerativeModel(
-        model: 'gemini-2.5-flash',
-        apiKey: '${dotenv.env['GEMINI_API_KEY']}',
+        model: 'gemini-1.5-flash',
+        apiKey:
+            'AIzaSyBKMrlvPvyueZ2dtPBw2QV2P-vc3YpGKt8', // Thay bằng API Key thật của bạn
       );
 
       // 2. Thiết lập nội dung Prompt kết hợp với nhật ký của user
@@ -51,18 +52,18 @@ class NoteProvider extends ChangeNotifier {
   }
 
   final Map<int, String> _moodMap = {
-    4: 'Vui vẻ',
-    3: 'Hào hứng',
+    0: 'Vui vẻ',
+    1: 'Hào hứng',
     2: 'Buồn',
-    1: 'Tức giận',
-    0: 'Lo lắng',
+    3: 'Tức giận',
+    4: 'Lo lắng',
   };
+
   Future<void> generateInsightsSummary() async {
     if (_isGeneratingInsights) return;
 
     _isGeneratingInsights = true;
-    _insightsSummary =
-        "Chào bạn mới! Hãy bắt đầu hành trình ghi lại cảm xúc của mình để Liptwo có thể đồng hành cùng bạn nhé. 🌱";
+    _insightsSummary = "Liptwo đang suy nghĩ...";
     notifyListeners();
 
     try {
@@ -103,7 +104,8 @@ class NoteProvider extends ChangeNotifier {
 
       final model = GenerativeModel(
         model: 'gemini-2.5-flash',
-        apiKey: '${dotenv.env['GEMINI_API_KEY']}',
+        apiKey:
+            'AIzaSyBKMrlvPvyueZ2dtPBw2QV2P-vc3YpGKt8', // Thay bằng API Key thật của bạn
       );
 
       final prompt =
@@ -126,45 +128,26 @@ class NoteProvider extends ChangeNotifier {
       _insightsSummary = response.text;
     } catch (e) {
       debugPrint("Lỗi tạo insight Gemini: $e");
-      // _insightsSummary =
-      //     "Có lỗi nhỏ xảy ra khi Liptwo đang viết. Bạn thử lại sau nhé.";
+      _insightsSummary =
+          "Có lỗi nhỏ xảy ra khi Liptwo đang viết. Bạn thử lại sau nhé.";
     } finally {
       _isGeneratingInsights = false;
       notifyListeners();
     }
   }
 
-  // 1. Thêm hàm Helper để nhóm dữ liệu (có thể để bên ngoài hoặc trong class)
   Map<String, List<NoteModel>> _groupNotes(List<NoteModel> allNotes) {
     Map<String, List<NoteModel>> groups = {};
-
-    // Sắp xếp ghi chú mới nhất lên đầu trước khi nhóm
-    // allNotes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    // allNotes.sort((a, b) {
-    //   if (a.isPinned && !b.isPinned) {
-    //     return -1; // a comes first
-    //   } else if (!a.isPinned && b.isPinned) {
-    //     return 1; // b comes first
-    //   } else {
-    //     // Both are pinned or both are unpinned, sort by date
-    //     return b.createdAt.compareTo(a.createdAt);
-    //   }
-    // });
-
     for (var note in allNotes) {
-      // Dùng định dạng ngày làm Key (VD: "15/01/2026")
-      String dateKey = DateFormat('dd/MM/yyyy').format(note.createdAt);
+      String dateKey = DateFormat('yyyy-MM-dd').format(note.createdAt);
       if (groups[dateKey] == null) groups[dateKey] = [];
       groups[dateKey]!.add(note);
     }
     return groups;
   }
 
-  // 2. Tạo Getter để UI sử dụng. Nó sẽ tự động nhóm các ghi chú đã được filter (nếu có search)
   Map<String, List<NoteModel>> get groupedNotes {
-    return _groupNotes(
-      notes,
-    ); // 'notes' ở đây là getter đã lọc theo searchQuery của bạn
+    return _groupNotes(notes);
   }
 
   List<NoteModel> get notes {
@@ -176,35 +159,19 @@ class NoteProvider extends ChangeNotifier {
       }).toList();
     }
 
-    // //     // Sort by isPinned (true comes first), then by createdAt (newest first)
-    // filteredNotes.sort((a, b) {
-    //   if (a.isPinned && !b.isPinned) {
-    //     return -1; // a comes first
-    //   } else if (!a.isPinned && b.isPinned) {
-    //     return 1; // b comes first
-    //   } else {
-    //     // Both are pinned or both are unpinned, sort by date
-    //     return b.createdAt.compareTo(a.createdAt);
-    //   }
-    // });
+    // Sort by isPinned (true comes first), then by createdAt (newest first)
+    filteredNotes.sort((a, b) {
+      if (a.isPinned && !b.isPinned) {
+        return -1; // a comes first
+      } else if (!a.isPinned && b.isPinned) {
+        return 1; // b comes first
+      } else {
+        // Both are pinned or both are unpinned, sort by date
+        return b.createdAt.compareTo(a.createdAt);
+      }
+    });
     return filteredNotes;
   }
-
-  // Future<void> getAIAdviceDirectly(String content) async {
-  //   // Khởi tạo model trực tiếp trên App
-  //   final model = GenerativeModel(
-  //     model: 'gemini-1.5-flash',
-  //     apiKey: 'YOUR_GEMINI_API_KEY', // Hãy dùng biến môi trường để bảo mật
-  //   );
-
-  //   final prompt =
-  //       "Bạn là một chuyên gia tâm lý thấu cảm. Người dùng vừa viết một ghi chú như sau: '$content'. "
-  //       "Hãy đưa ra một lời phản hồi ngắn gọn (dưới 100 chữ), mang tính an ủi, khích lệ và đưa ra một lời khuyên nhỏ về tâm trạng này.";
-  //   final response = await model.generateContent([Content.text(prompt)]);
-
-  //   lastAIResponse = response.text;
-  //   notifyListeners();
-  // }
 
   String get searchQuery => _searchQuery;
   List<TagModel> get tags => _tags;
@@ -217,7 +184,7 @@ class NoteProvider extends ChangeNotifier {
 
   Future<void> loadNotes() async {
     _isLoading = true;
-    notifyListeners();
+    // notifyListeners(); // Avoids flicker on startup
     _notes = await repository.getAllNotes();
     _isLoading = false;
     notifyListeners();

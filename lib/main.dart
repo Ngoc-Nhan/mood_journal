@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mood_journal/components/onboarding/start_screen.dart';
+// import 'package:mood_journal/components/onboarding/start_screen.dart';
 import 'package:mood_journal/db/database_helper.dart';
+import 'package:mood_journal/pages/pin_login_page.dart';
+import 'package:mood_journal/pages/setup_page.dart';
 import 'package:mood_journal/providers/note_provider.dart';
 import 'package:mood_journal/providers/settings_provider.dart';
 import 'package:mood_journal/providers/theme_provider.dart';
@@ -13,26 +15,29 @@ import 'package:mood_journal/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   // Đảm bảo Flutter đã được khởi tạo
   WidgetsFlutterBinding.ensureInitialized();
   tz.initializeTimeZones();
   await DatabaseHelper.instance.database;
-  final prefs = await SharedPreferences.getInstance();
+  // final prefs = await SharedPreferences.getInstance();
 
-  // Mặc định là true nếu chưa từng lưu giá trị này (lần đầu cài app)
-  final bool showOnboarding = prefs.getBool('showOnboarding') ?? true;
+  // // Mặc định là true nếu chưa từng lưu giá trị này (lần đầu cài app)
+  // final bool showOnboarding = prefs.getBool('showOnboarding') ?? true;
   // Khởi tạo service
   final settingsService = SettingsService();
+  final settings = SettingsService();
+  final bool isFirstTime = await settings.isFirstTime();
   // Kiểm tra xem PIN có tồn tại không
   final bool hasPin = await settingsService.hasPin();
-
+  await dotenv.load(fileName: ".env");
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle(statusBarColor: Colors.transparent),
   );
 
-  runApp(MyApp(showOnboarding: showOnboarding, hasPin: hasPin));
+  runApp(MyApp(showOnboarding: isFirstTime, hasPin: hasPin));
 }
 
 class MyApp extends StatelessWidget {
@@ -60,9 +65,13 @@ class MyApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.themeMode,
-            home: showOnboarding ? const WelcomeScreen() : const HomeScreen(),
+            // home:
             // Quyết định màn hình đầu tiên dựa trên việc có PIN hay không
-            // home: hasPin ? const PinLoginPage() : const SetupPage(),
+            home: showOnboarding
+                ? const SetupPage()
+                : hasPin
+                ? const PinLoginPage()
+                : const HomeScreen(),
           );
         },
       ),
