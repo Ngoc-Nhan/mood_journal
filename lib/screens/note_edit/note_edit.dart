@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -39,7 +40,6 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   List<String> _attachments = [];
   String? _aiResponse;
   DateTime? _aiResponseCreatedAt;
-  bool _isSaving = false;
   final _tagController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   @override
@@ -76,10 +76,10 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
       Navigator.pop(context);
       return;
     }
-    setState(() {
-      _isSaving = true;
-      _editMode = false;
-    });
+    // setState(() {
+    //   _isSaving = true;
+    //   _editMode = false;
+    // });
     final noteProvider = Provider.of<NoteProvider>(context, listen: false);
 
     // final note = NoteModel(
@@ -98,12 +98,21 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     // );
 
     try {
-      if (widget.note == null && _isSaving) {
+      if (widget.note == null && _aiResponse == null) {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) =>
-              const Center(child: CircularProgressIndicator()),
+          builder: (context) => Center(
+            child: Column(
+              children: [
+                CircularProgressIndicator(),
+                // Text(
+                //   'Đang lưu và chờ phản hồi từ AI...',
+                //   style: TextStyle(fontSize: 16),
+                // ),
+              ],
+            ),
+          ),
         );
 
         // 1. Gọi SDK để lấy phản hồi AI
@@ -117,7 +126,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
           if (_aiResponse != null) {
             _aiResponseCreatedAt =
                 DateTime.now(); // Ghi nhận thời gian tạo AI response
-            _showAIResultPopup(context, _aiResponse!);
+            await _showAIResultPopup(context, _aiResponse!);
           }
         }
       }
@@ -143,6 +152,11 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         await noteProvider.createNote(note);
       } else {
         await noteProvider.updateNote(note);
+      }
+
+      // Thoát màn hình sau khi hoàn tất
+      if (mounted) {
+        Navigator.pop(context);
       }
     } catch (e) {
       // Xử lý lỗi nếu database có vấn đề
@@ -201,11 +215,21 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
           ),
 
           IconButton(
-            onPressed: () {
-              setState(() {
-                _editMode = !_editMode;
-              });
-              _editMode ? null : _saveNote();
+            // onPressed: () {
+            //   setState(() {
+            //     _editMode = !_editMode;
+            //   });
+            //   _editMode ? null : _saveNote();
+            // },
+            onPressed: () async {
+              if (_editMode) {
+                await _saveNote();
+                // Không cần setState ở đây vì _saveNote sẽ đóng màn hình
+              } else {
+                setState(() {
+                  _editMode = true;
+                });
+              }
             },
             icon: Icon(_editMode ? Icons.save : Icons.edit),
           ),
@@ -335,14 +359,18 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                       padding: EdgeInsetsGeometry.only(right: 8),
                       child: Stack(
                         children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.file(
-                              File(_attachments[index]),
-                              width: 100,
-                              height: 100,
-                              fit: BoxFit.cover,
-                              cacheWidth: 200,
+                          GestureDetector(
+                            onTap: () =>
+                                _openImage(context, _attachments[index]),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.file(
+                                File(_attachments[index]),
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                                cacheWidth: 200,
+                              ),
                             ),
                           ),
                           _editMode
@@ -391,6 +419,38 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         ),
       ),
       bottomSheet: _buildBottomBar(),
+    );
+  }
+
+  void _openImage(BuildContext context, String filePath) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.black54,
+      pageBuilder: (_, __, ___) {
+        return GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: Stack(
+            children: [
+              BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(color: Colors.black26),
+              ),
+              Center(
+                child: Image.file(
+                  File(filePath),
+
+                  width: 300,
+                  fit: BoxFit.contain,
+                  // alignment: Alignment.topCenter,
+                  cacheWidth: 200,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -498,7 +558,9 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
           ? Container(
               key: const ValueKey('editBar'),
               height: 60,
-              color: Colors.white,
+              color: isDark
+                  ? AppColors.backgroundDark
+                  : AppColors.backgroundLight,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -678,8 +740,8 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   }
 
   // void _showIconResponeDialog(BuildContext context) {
-  void _showAIResultPopup(BuildContext context, String response) {
-    showDialog(
+  Future<void> _showAIResultPopup(BuildContext context, String response) async {
+    await showDialog(
       context: context,
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

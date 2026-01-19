@@ -1,34 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:mood_journal/components/onboarding/pin_page.dart';
+import 'package:mood_journal/providers/theme_provider.dart';
+import 'package:provider/provider.dart';
 import 'onboarding_layout.dart';
 import './pin_page.dart';
 
 class ChoiceTheme extends StatefulWidget {
-  final String name;
-  const ChoiceTheme({super.key,required this.name});
+  const ChoiceTheme({super.key});
 
   @override
   State<ChoiceTheme> createState() => _ChoiceThemeState();
 }
 
 class _ChoiceThemeState extends State<ChoiceTheme> {
+  String? _selectedTheme; // Biến để lưu theme được chọn
+
+  void _onNext() {
+    if (_selectedTheme != null) {
+      // SỬA LỖI: Dùng Provider để cập nhật và lưu theme, đồng thời thông báo cho toàn app
+      Provider.of<ThemeProvider>(
+        context,
+        listen: false,
+      ).updateBackground(_selectedTheme!);
+    }
+
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const PinPage()),
+      );
+    }
+  }
+
+  void _onSkip() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const PinPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return OnboardingLayout(
-      title: 'Choose \nYour Theme',
+      title: 'Choose \nYour Background',
       subtitle: 'You can change later',
-      body: const ThemeSelector(),
+      body: ThemeSelector(
+        onThemeChanged: (themePath) {
+          _selectedTheme = themePath;
+        },
+      ),
       primaryText: 'Next',
-      onPrimary: () {
-        Navigator.push(context, MaterialPageRoute(builder: (_) => PinPage(name: widget.name,)));
-      },
+      onPrimary: _onNext,
       secondaryButton: Padding(
-        padding: EdgeInsetsGeometry.only(right: 16),
+        padding: const EdgeInsets.only(right: 16),
         child: SizedBox(
           height: 50,
           child: OutlinedButton(
-            onPressed: () {},
-            child: Text('Skip', style: TextStyle(color: Colors.black)),
+            onPressed: _onSkip, // Bỏ qua không lưu
+            child: const Text('Skip', style: TextStyle(color: Colors.black)),
           ),
         ),
       ),
@@ -36,135 +65,10 @@ class _ChoiceThemeState extends State<ChoiceTheme> {
   }
 }
 
-// class ThemeSelector extends StatelessWidget {
-//   const ThemeSelector({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return SizedBox(
-//       height: 260,
-//       child: Row(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         children: const [
-//           ThemeCard(imagePath: 'assets/images/theme1.png', isMain: false),
-//           SizedBox(width: 16),
-//           ThemeCard(
-//             imagePath: 'assets/images/theme2.png',
-//             isMain: true, // 👈 hình giữa lớn
-//           ),
-//           SizedBox(width: 16),
-//           ThemeCard(imagePath: 'assets/images/theme3.png', isMain: false),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
-/* class ThemeSelector extends StatelessWidget {
-
-  const ThemeSelector({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 360,
-      child: Stack(
-        alignment: Alignment.center,
-        clipBehavior: Clip.none,
-        children: const [
-          // Card trái (bị cắt)
-          Positioned(
-            left: -120,
-            child: ThemeCard(
-              imagePath: 'assets/images/theme1.png',
-              width: 220,
-              height: 300,
-            ),
-          ),
-
-          // Card phải (bị cắt)
-          Positioned(
-            right: -120,
-            child: ThemeCard(
-              imagePath: 'assets/images/theme3.png',
-              width: 220,
-              height: 300,
-            ),
-          ),
-
-          // Card chính (ở giữa)
-          ThemeCard(
-            imagePath: 'assets/images/theme2.png',
-
-            width: 254, // 👈 đúng như Figma
-            height: 321,
-            isMain: true,
-          ),
-        ],
-      ),
-    );
-  }
-}
-*/
-// class ThemeSelector extends StatelessWidget {
-//   const ThemeSelector({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     const mainWidth = 254.0;
-//     const sideWidth = 220.0;
-//     const gap = 8.0;
-
-//     final sideOffset = (mainWidth / 2) + (sideWidth / 2) + gap;
-
-//     return SizedBox(
-//       height: 360,
-//       child: Stack(
-//         children: [
-//           // Card trái
-//           Align(
-//             alignment: Alignment.center,
-//             child: Transform.translate(
-//               offset: Offset(-sideOffset, 0),
-//               child: const ThemeCard(
-//                 imagePath: 'assets/images/theme1.png',
-//                 width: sideWidth,
-//                 height: 300,
-//               ),
-//             ),
-//           ),
-
-//           // Card phải
-//           Align(
-//             alignment: Alignment.center,
-//             child: Transform.translate(
-//               offset: Offset(sideOffset, 0),
-//               child: const ThemeCard(
-//                 imagePath: 'assets/images/theme3.png',
-//                 width: sideWidth,
-//                 height: 300,
-//               ),
-//             ),
-//           ),
-
-//           // Card chính
-//           const Align(
-//             alignment: Alignment.center,
-//             child: ThemeCard(
-//               imagePath: 'assets/images/theme2.png',
-//               width: mainWidth,
-//               height: 321,
-//               isMain: true,
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
 class ThemeSelector extends StatefulWidget {
-  const ThemeSelector({super.key});
+  final void Function(String) onThemeChanged;
 
+  const ThemeSelector({super.key, required this.onThemeChanged});
 
   @override
   State<ThemeSelector> createState() => _ThemeSelectorState();
@@ -172,17 +76,23 @@ class ThemeSelector extends StatefulWidget {
 
 class _ThemeSelectorState extends State<ThemeSelector> {
   final PageController _controller = PageController(
-    viewportFraction: 0.6, // 👈 khoảng hở 2 bên
+    viewportFraction: 0.6,
     initialPage: 1,
   );
 
   int currentIndex = 1;
 
   final themes = [
-    'assets/images/theme1.png',
-    'assets/images/theme2.png',
+    'assets/images/theme11.gif',
+    'assets/images/theme10.gif',
     'assets/images/theme3.png',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    widget.onThemeChanged(themes[currentIndex]);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -193,6 +103,7 @@ class _ThemeSelectorState extends State<ThemeSelector> {
         itemCount: themes.length,
         onPageChanged: (index) {
           setState(() => currentIndex = index);
+          widget.onThemeChanged(themes[index]);
         },
         itemBuilder: (context, index) {
           return AnimatedBuilder(
@@ -206,13 +117,24 @@ class _ThemeSelectorState extends State<ThemeSelector> {
               }
 
               return Center(
-                child: Transform.scale(
-                  scale: scale,
-                  child: ThemeCard(
-                    imagePath: themes[index],
-                    width: index == currentIndex ? 254 : 220,
-                    height: index == currentIndex ? 321 : 300,
-                    isMain: index == currentIndex,
+                child: GestureDetector(
+                  onTap: () {
+                    if (currentIndex != index) {
+                      _controller.animateToPage(
+                        index,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      );
+                    }
+                  },
+                  child: Transform.scale(
+                    scale: scale,
+                    child: ThemeCard(
+                      imagePath: themes[index],
+                      width: index == currentIndex ? 254 : 220,
+                      height: index == currentIndex ? 321 : 300,
+                      isMain: index == currentIndex,
+                    ),
                   ),
                 ),
               );
@@ -246,41 +168,10 @@ class ThemeCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        // boxShadow: const [
-        //   BoxShadow(
-        //     color: Colors.black12,
-        //     blurRadius: 12,
-        //     offset: Offset(0, 6),
-        //   ),
-        // ],
       ),
       child: ClipRRect(
-        // borderRadius: BorderRadius.circular(20),
-        child: Image.asset(
-          imagePath,
-          fit: BoxFit.cover, // 👈 phủ kín card
-        ),
-
-        // 🔹 PHẦN CONTENT
-        // Expanded(
-        //   child: Padding(
-        //     padding: const EdgeInsets.all(16),
-        //     child: Column(
-        //       mainAxisAlignment: MainAxisAlignment.start,
-        //       children: List.generate(
-        //         4,
-        //         (_) => Container(
-        //           height: 10,
-        //           margin: const EdgeInsets.only(bottom: 10),
-        //           decoration: BoxDecoration(
-        //             color: Colors.grey.shade300,
-        //             borderRadius: BorderRadius.circular(6),
-        //           ),
-        //         ),
-        //       ),
-        //     ),
-        //   ),
-        // ),
+        borderRadius: BorderRadius.circular(20), // Bo tròn ảnh
+        child: Image.asset(imagePath, fit: BoxFit.cover),
       ),
     );
   }

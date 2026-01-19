@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mood_journal/screens/home/home_screen.dart';
 import 'package:mood_journal/services/settings_service.dart';
 
 class PinLoginPage extends StatefulWidget {
@@ -16,11 +17,9 @@ class _PinLoginPageState extends State<PinLoginPage> {
   void _unlockApp() async {
     final savedPin = await _settingsService.getPin();
     if (savedPin == _pinController.text) {
-      if (mounted) {
-        // Navigator.of(context).pushReplacement(
-        //   MaterialPageRoute(builder: (context) => const Layout()),
-        // );
-      }
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
     } else {
       setState(() {
         _errorText = 'Mã PIN không đúng. Vui lòng thử lại.';

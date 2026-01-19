@@ -9,7 +9,7 @@ class SettingsService {
   static const _pinKey = 'user_pin';
   static const _nameKey = 'user_name';
   static const _themeKey = 'user_theme_background';
-
+  static const _isFirstTimeKey = 'is_first_time';
   // --- Quản lý PIN ---
   Future<void> savePin(String pin) async {
     await _secureStorage.write(key: _pinKey, value: pin);
@@ -49,5 +49,16 @@ class SettingsService {
     final prefs = await SharedPreferences.getInstance();
     // Trả về một giá trị mặc định nếu chưa được cài đặt
     return prefs.getString(_themeKey);
+  }
+
+  Future<bool> isFirstTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Nếu chưa có giá trị, mặc định trả về true (là lần đầu)
+    return prefs.getBool(_isFirstTimeKey) ?? true;
+  }
+
+  Future<void> setFirstTimeComplete() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_isFirstTimeKey, false);
   }
 }

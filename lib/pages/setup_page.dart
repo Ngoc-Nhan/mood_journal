@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mood_journal/screens/home/home_screen.dart';
 import 'package:mood_journal/services/settings_service.dart';
 
 class SetupPage extends StatefulWidget {
@@ -42,12 +43,13 @@ class _SetupPageState extends State<SetupPage> {
     if (_selectedTheme != null) {
       await _settingsService.saveTheme(_selectedTheme!);
     }
+    await _settingsService.setFirstTimeComplete();
 
     // Chuyển đến màn hình chính của ứng dụng
     if (mounted) {
-      // Navigator.of(context).pushReplacement(
-      //   MaterialPageRoute(builder: (context) => const Layout()),
-      // );
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
     }
   }
 

@@ -72,7 +72,12 @@ class _BuildNoteDetailState extends State<BuildNoteDetail> {
                     children: [
                       Text(
                         DateFormat('HH:mm').format(widget.note.createdAt),
-                        style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                        style: TextStyle(
+                          color: isDark
+                              ? AppColors.textSecondaryDark
+                              : AppColors.textSecondaryLight,
+                          fontSize: 12,
+                        ),
                       ),
                       Row(
                         mainAxisSize: MainAxisSize.min,
@@ -92,7 +97,9 @@ class _BuildNoteDetailState extends State<BuildNoteDetail> {
                       ? Icon(
                           moodIcons[widget.note.moodIndex!],
                           size: 30,
-                          color: Colors.black54,
+                          color: isDark
+                              ? AppColors.backgroundLight
+                              : AppColors.backgroundDark,
                         )
                       : Container(),
 
@@ -116,7 +123,7 @@ class _BuildNoteDetailState extends State<BuildNoteDetail> {
                     widget.note.content,
                     maxLines: 5,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Colors.black.withOpacity(0.7)),
+                    style: Theme.of(context).textTheme.titleSmall,
                   ),
                   if (widget.note.tags.isNotEmpty) ...[
                     SizedBox(height: 8),

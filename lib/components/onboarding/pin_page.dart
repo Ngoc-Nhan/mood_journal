@@ -1,20 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:mood_journal/components/onboarding/onboarding_layout.dart';
+import 'package:mood_journal/services/settings_service.dart';
 import 'onboarding_layout.dart';
 import './welcome_page.dart';
 
 class PinPage extends StatefulWidget {
-  final String name;
-  const PinPage({super.key, required this.name});
+  const PinPage({super.key});
 
   @override
   State<PinPage> createState() => _PinPageState();
 }
 
 class _PinPageState extends State<PinPage> {
-  // final TextEditingController _pinController = TextEditingController();
+  final TextEditingController _pinController = TextEditingController();
+  final _settingsService = SettingsService();
   List<int> pin = [];
   static const int pinLength = 4;
+
+  void _saveSettings() async {
+    if (_pinController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng nhập đầy đủ tên và mã PIN.')),
+      );
+      return;
+    }
+
+    if (_pinController.text.length < 4) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Mã PIN phải có ít nhất 4 ký tự.')),
+      );
+      return;
+    }
+    await _settingsService.savePin(_pinController.text);
+  }
+
   Widget _buildPinDots() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -64,7 +83,7 @@ class _PinPageState extends State<PinPage> {
       child: GridView.count(
         shrinkWrap: true,
         crossAxisCount: 3,
-        mainAxisSpacing: 20,
+        mainAxisSpacing: 10,
         crossAxisSpacing: 20,
         physics: const NeverScrollableScrollPhysics(),
         children: [
@@ -87,7 +106,7 @@ class _PinPageState extends State<PinPage> {
         children: [
           // const SizedBox(height: ),
           _buildPinDots(),
-          // const SizedBox(height: 30),
+          const SizedBox(height: 30),
           _buildKeypad(),
         ],
       ),
@@ -97,9 +116,7 @@ class _PinPageState extends State<PinPage> {
           ? () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => WelcomePage(name: widget.name),
-                ),
+                MaterialPageRoute(builder: (_) => WelcomePage()),
               );
             }
           : null,
@@ -115,9 +132,7 @@ class _PinPageState extends State<PinPage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => WelcomePage(name: widget.name),
-                ),
+                MaterialPageRoute(builder: (_) => WelcomePage()),
               );
             },
             child: Text('Skip', style: TextStyle(color: Colors.black)),

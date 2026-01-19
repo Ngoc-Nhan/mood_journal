@@ -10,7 +10,13 @@ import 'package:mood_journal/models/note_model.dart';
 import 'package:mood_journal/pages/calendar_screen.dart';
 import 'package:mood_journal/providers/note_provider.dart';
 import 'package:mood_journal/providers/settings_provider.dart';
+import 'package:mood_journal/providers/theme_provider.dart';
+import 'package:mood_journal/screens/bottom_navi/account_screen.dart';
+import 'package:mood_journal/screens/bottom_navi/insights_screen.dart';
+import 'package:mood_journal/screens/home/theme_screen.dart';
 import 'package:mood_journal/screens/note_edit/note_edit.dart';
+import 'package:mood_journal/screens/search/search_screen.dart';
+import 'package:mood_journal/services/settings_service.dart';
 import 'package:mood_journal/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 
@@ -66,6 +72,17 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  // Sửa lỗi Hot Reload: Khởi tạo lazy với 'late final'.
+  // Hàm _getUserName sẽ chỉ được gọi một lần khi _userNameFuture được truy cập lần đầu.
+  late final Future<String?> _userNameFuture = _getUserName();
+
+  Future<String?> _getUserName() async {
+    final settingsService = SettingsService();
+    return await settingsService.getUserName();
+  }
+
+  // initState không còn cần thiết để khởi tạo future này nữa.
+
   Widget _getActiveScreen() {
     switch (_selectedIndex) {
       case 0:
@@ -73,9 +90,9 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         return const CalendarScreen();
       case 3:
-        return const Center(child: Text("Insights Screen - Coming Soon"));
+        return const InsightsScreen();
       case 4:
-        return const Center(child: Text("Account Screen - Coming Soon"));
+        return const AccountScreen();
       default:
         return _buildHomeContent();
     }
@@ -83,14 +100,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: isDark
+          ? AppColors.backgroundDark
+          : AppColors.backgroundLight,
       // STEP 2: The Body dynamically changes based on _selectedIndex
       body: SafeArea(child: _getActiveScreen()),
 
       // STEP 3: Centered Floating Action Button
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.primaryVariant,
+        backgroundColor: AppColors.primary,
         shape: const CircleBorder(),
         onPressed: () {
           Navigator.push(
@@ -102,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Provider.of<NoteProvider>(context, listen: false).loadNotes();
           });
         },
-        child: const Icon(Icons.add, color: Colors.white),
+        child: Icon(Icons.add, color: isDark ? Colors.black : Colors.white),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
@@ -113,12 +133,14 @@ class _HomeScreenState extends State<HomeScreen> {
   // --- UI COMPONENTS ---
 
   Widget _buildBottomAppBar() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return BottomAppBar(
       notchMargin: 10,
       elevation: 20,
 
       // shape: const CircularNotchedRectangle(),
-      color: Colors.white,
+      color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -131,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             children: [
               _buildNavItem(Icons.insights_rounded, 'Insight', 3),
-              _buildNavItem(Icons.person_rounded, 'Account', 4),
+              _buildNavItem(Icons.person_rounded, 'Settings', 4),
             ],
           ),
         ],
@@ -148,15 +170,12 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: isSelected ? AppColors.primaryVariant : Colors.grey,
-          ),
+          Icon(icon, color: isSelected ? AppColors.primary : Colors.grey),
           Text(
             label,
             style: TextStyle(
               fontSize: 12,
-              color: isSelected ? AppColors.primaryVariant : Colors.grey,
+              color: isSelected ? AppColors.primary : Colors.grey,
             ),
           ),
         ],
@@ -165,27 +184,44 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHomeContent() {
-    return Column(
-      children: [
-        _buildHeaderStack(),
-        Expanded(child: _buildBody()),
-      ],
+    return Consumer<ThemeProvider>(
+      builder: (context, theme, child) {
+        final isDark = theme.themeMode == ThemeMode.dark;
+        final bgImage = theme.currentBackground;
+
+        return Column(
+          children: [
+            // Truyền trực tiếp bgImage vào để hiển thị tức thì
+            _buildHeaderStack(bgImage, isDark),
+            Expanded(child: _buildBody()),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildHeaderStack() {
+  Widget _buildHeaderStack(bgImage, isDark) {
+    // final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Stack(
       alignment: Alignment.center,
       children: [
-        Container(
-          width: double.infinity,
-          height: 180,
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/images/banner.png'),
-              fit: BoxFit.cover,
-            ),
-          ),
+        Selector<ThemeProvider, String?>(
+          selector: (_, provider) => provider.currentBackground,
+          builder: (context, currentBg, child) {
+            return Container(
+              width: double.infinity,
+              height: 180,
+              decoration: currentBg != null
+                  ? BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage(currentBg),
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : const BoxDecoration(color: Colors.grey),
+            );
+          },
         ),
         SizedBox(width: 10),
         Column(
@@ -199,24 +235,24 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 const SizedBox(width: 20),
                 //Avatar
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        spreadRadius: 2,
-                        blurRadius: 5,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: CircleAvatar(
-                    backgroundImage: AssetImage('assets/images/welcome_1.png'),
-                  ),
-                ),
+                // Container(
+                //   width: 50,
+                //   height: 50,
+                //   decoration: BoxDecoration(
+                //     shape: BoxShape.circle,
+                //     boxShadow: [
+                //       BoxShadow(
+                //         color: Colors.black.withOpacity(0.2),
+                //         spreadRadius: 2,
+                //         blurRadius: 5,
+                //         offset: const Offset(0, 4),
+                //       ),
+                //     ],
+                //   ),
+                //   child: CircleAvatar(
+                //     backgroundImage: AssetImage('assets/images/welcome_1.png'),
+                //   ),
+                // ),
                 const SizedBox(width: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,14 +274,28 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
 
-                    // Tên người dùng
-                    Text(
-                      'Hello, Văn Huỳnh', // tên người dùng
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
-                      ),
+                    // Tên người dùng - ĐÃ SỬA BẰNG FUTUREBUILDER
+                    FutureBuilder<String?>(
+                      future: _userNameFuture,
+                      builder: (context, snapshot) {
+                        final style = const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        );
+
+                        if (snapshot.connectionState == ConnectionState.done) {
+                          if (snapshot.hasData &&
+                              snapshot.data != null &&
+                              snapshot.data!.isNotEmpty) {
+                            return Text(snapshot.data!, style: style);
+                          }
+                          // Nếu không có data hoặc data rỗng, hiển thị tên mặc định
+                          return Text('My Friend', style: style);
+                        }
+                        // Trong khi chờ, có thể hiển thị một placeholder ngắn
+                        return Text('...', style: style);
+                      },
                     ),
                   ],
                 ),
@@ -254,13 +304,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.7),
+                    color: isDark
+                        ? AppColors.backgroundDark
+                        : AppColors.backgroundLight,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.palette,
-                    color: const Color.fromARGB(255, 227, 149, 149),
-                    size: 25,
+                  child: IconButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => ThemeScreen()),
+                      );
+                    },
+                    icon: Icon(
+                      Icons.palette,
+                      color: AppColors.primary,
+                      size: 25,
+                    ),
                   ),
                 ),
               ],
@@ -271,7 +331,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 label: Text('1'),
                 onPressed: () {},
                 style: ButtonStyle(
-                  backgroundColor: WidgetStatePropertyAll(Colors.white),
+                  backgroundColor: isDark
+                      ? WidgetStatePropertyAll(Colors.black)
+                      : WidgetStatePropertyAll(Colors.white),
                   foregroundColor: WidgetStatePropertyAll(Colors.red),
                   minimumSize: WidgetStatePropertyAll(Size.zero),
                   maximumSize: WidgetStatePropertyAll(Size(300, 300)),
@@ -292,8 +354,10 @@ class _HomeScreenState extends State<HomeScreen> {
           right: 0,
           child: Container(
             height: 30,
-            decoration: const BoxDecoration(
-              color: Color(0xFFF5F5F5),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.backgroundDark
+                  : AppColors.backgroundLight,
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(30),
                 topRight: Radius.circular(30),
@@ -306,7 +370,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   IconButton(
                     onPressed: () {
-                      // Navigator.push(context, MaterialPageRoute(builder: (_) => SearchScreen(); )),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => SearchScreen()),
+                      );
                     },
                     icon: Icon(Icons.search),
                   ),
@@ -460,29 +527,4 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
-
-  // Widget _buildListView(List<NoteModel> notes) {
-  //   return AnimationLimiter(
-  //     child: ListView.builder(
-  //       padding: EdgeInsets.all(16),
-  //       itemCount: notes.length,
-  //       itemBuilder: (context, index) {
-  //         final note = notes[index];
-  //         return AnimationConfiguration.staggeredList(
-  //           position: index,
-  //           duration: const Duration(milliseconds: 375),
-  //           child: SlideAnimation(
-  //             verticalOffset: 50.0,
-  //             child: FadeInAnimation(
-  //               child: Padding(
-  //                 padding: EdgeInsets.only(bottom: 12),
-  //                 child: NoteCard(note: notes[index]),
-  //               ),
-  //             ),
-  //           ),
-  //         );
-  //       },
-  //     ),
-  //   );
-  // }
 }

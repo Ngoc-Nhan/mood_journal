@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mood_journal/components/onboarding/onboarding_layout.dart';
+import 'package:mood_journal/services/settings_service.dart';
 import 'choice_theme.dart';
 
 class InputInfo extends StatefulWidget {
@@ -11,6 +12,7 @@ class InputInfo extends StatefulWidget {
 
 class _InputInfoState extends State<InputInfo> {
   late final TextEditingController _nameController;
+  final _settingsService = SettingsService();
 
   @override
   void initState() {
@@ -27,10 +29,11 @@ class _InputInfoState extends State<InputInfo> {
   void _onNext(BuildContext context) {
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
+    _settingsService.saveUserName(name);
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => ChoiceTheme(name: name)),
+      MaterialPageRoute(builder: (_) => ChoiceTheme()),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:mood_journal/models/note_model.dart';
 import 'package:mood_journal/models/tag_model.dart';
@@ -14,6 +15,12 @@ class NoteProvider extends ChangeNotifier {
   String? _lastAIResponse;
   String? get lastAIResponse => _lastAIResponse;
 
+  // For Insights
+  String? _insightsSummary;
+  String? get insightsSummary => _insightsSummary;
+  bool _isGeneratingInsights = false;
+  bool get isGeneratingInsights => _isGeneratingInsights;
+
   // Hàm gọi AI trực tiếp từ App
   Future<void> generateAIAdvice(String content) async {
     _isLoading = true;
@@ -23,8 +30,7 @@ class NoteProvider extends ChangeNotifier {
       // 1. Khởi tạo Model (Sử dụng gemini-1.5-flash để phản hồi nhanh)
       final model = GenerativeModel(
         model: 'gemini-2.5-flash',
-        apiKey:
-            'AIzaSyBKMrlvPvyueZ2dtPBw2QV2P-vc3YpGKt8', // Thay bằng API Key thật của bạn
+        apiKey: '${dotenv.env['GEMINI_API_KEY']}',
       );
 
       // 2. Thiết lập nội dung Prompt kết hợp với nhật ký của user
@@ -44,12 +50,106 @@ class NoteProvider extends ChangeNotifier {
     }
   }
 
+  final Map<int, String> _moodMap = {
+    4: 'Vui vẻ',
+    3: 'Hào hứng',
+    2: 'Buồn',
+    1: 'Tức giận',
+    0: 'Lo lắng',
+  };
+  Future<void> generateInsightsSummary() async {
+    if (_isGeneratingInsights) return;
+
+    _isGeneratingInsights = true;
+    _insightsSummary =
+        "Chào bạn mới! Hãy bắt đầu hành trình ghi lại cảm xúc của mình để Liptwo có thể đồng hành cùng bạn nhé. 🌱";
+    notifyListeners();
+
+    try {
+      if (_notes.isEmpty) {
+        _insightsSummary =
+            "Chào bạn mới! Hãy bắt đầu hành trình ghi lại cảm xúc của mình để Liptwo có thể đồng hành cùng bạn nhé. 🌱";
+        _isGeneratingInsights = false;
+        notifyListeners();
+        return;
+      }
+
+      // Data preparation
+      final totalNotes = _notes.length;
+      final moodCounts = <int, int>{};
+      for (var note in _notes) {
+        if (note.moodIndex != null) {
+          moodCounts[note.moodIndex!] = (moodCounts[note.moodIndex!] ?? 0) + 1;
+        }
+      }
+
+      String moodSummary = "chưa có dữ liệu";
+      if (moodCounts.isNotEmpty) {
+        final sortedMoods = moodCounts.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+        final mostCommonMoodName =
+            _moodMap[sortedMoods.first.key] ?? "không xác định";
+        moodSummary =
+            "Trong $totalNotes ghi chú, bạn có vẻ thường cảm thấy '$mostCommonMoodName' nhất.";
+      }
+
+      final lastNoteDate = _notes.first.createdAt;
+      final daysSinceLastNote = DateTime.now().difference(lastNoteDate).inDays;
+      String lastEntrySummary = "Hôm nay bạn đã ghi chú rồi, tuyệt vời!";
+      if (daysSinceLastNote > 0) {
+        lastEntrySummary =
+            "Đã $daysSinceLastNote ngày rồi bạn chưa viết đó, Liptwo nhớ bạn.";
+      }
+
+      final model = GenerativeModel(
+        model: 'gemini-2.5-flash',
+        apiKey: '${dotenv.env['GEMINI_API_KEY']}',
+      );
+
+      final prompt =
+          "Bạn là 'Liptwo', một người bạn tâm giao luôn thấu cảm và tinh tế. Dựa vào các số liệu sau đây về người dùng, hãy đưa ra một lời nhận xét ngắn gọn (khoảng 2-3 câu) thật ý nghĩa, ấm áp và mang tính cá nhân hóa để hiển thị trên màn hình Insight của họ. Hãy linh hoạt thay đổi văn phong dựa trên dữ liệu."
+          "\n\n**Dữ liệu:**"
+          "\n- **Tổng số ghi chú:** $totalNotes"
+          "\n- **Thống kê tâm trạng:** $moodSummary"
+          "\n- **Lần cuối ghi chú:** $lastEntrySummary"
+          "\n\n**Nhiệm vụ của bạn:**"
+          "\n1. **Nếu người dùng viết đều đặn (dưới 2 ngày chưa viết):** Khen ngợi sự chăm chỉ của họ. Dựa vào tâm trạng chủ đạo để đưa ra lời động viên hoặc chia vui. Ví dụ: 'Bạn thật tuyệt vời khi giữ thói quen viết mỗi ngày! Nhìn lại, Liptwo thấy bạn đã có nhiều khoảnh khắc vui vẻ đó. ✨'"
+          "\n2. **Nếu người dùng đã lâu không viết (từ 2 ngày trở lên):** Nhẹ nhàng nhắc nhở và khuyến khích họ quay lại. Ví dụ: 'Đã $daysSinceLastNote ngày rồi chúng ta chưa trò chuyện. Liptwo nhớ những câu chuyện của bạn, hôm nay bạn cảm thấy thế nào?'"
+          "\n3. **Nếu họ là người mới (dưới 5 ghi chú):** Chào mừng và khuyến khích họ bắt đầu hành trình. Ví dụ: 'Chào mừng bạn đến với góc nhỏ của chúng mình! Thật tuyệt khi bạn đã bắt đầu ghi lại những cảm xúc đầu tiên. 🌱'"
+          "\n\n**Yêu cầu:**"
+          "\n- Giọng văn: Luôn gần gũi, ấm áp, không sáo rỗng."
+          "\n- Ngôn ngữ: Tiếng Việt."
+          "\n- Sử dụng icon phù hợp. ✨🫂🌱"
+          "\n\n**Hãy tạo ra một phản hồi duy nhất cho phần Tip Card ngay bây giờ.**";
+
+      final response = await model.generateContent([Content.text(prompt)]);
+      _insightsSummary = response.text;
+    } catch (e) {
+      debugPrint("Lỗi tạo insight Gemini: $e");
+      // _insightsSummary =
+      //     "Có lỗi nhỏ xảy ra khi Liptwo đang viết. Bạn thử lại sau nhé.";
+    } finally {
+      _isGeneratingInsights = false;
+      notifyListeners();
+    }
+  }
+
   // 1. Thêm hàm Helper để nhóm dữ liệu (có thể để bên ngoài hoặc trong class)
   Map<String, List<NoteModel>> _groupNotes(List<NoteModel> allNotes) {
     Map<String, List<NoteModel>> groups = {};
 
     // Sắp xếp ghi chú mới nhất lên đầu trước khi nhóm
-    allNotes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    // allNotes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    // allNotes.sort((a, b) {
+    //   if (a.isPinned && !b.isPinned) {
+    //     return -1; // a comes first
+    //   } else if (!a.isPinned && b.isPinned) {
+    //     return 1; // b comes first
+    //   } else {
+    //     // Both are pinned or both are unpinned, sort by date
+    //     return b.createdAt.compareTo(a.createdAt);
+    //   }
+    // });
 
     for (var note in allNotes) {
       // Dùng định dạng ngày làm Key (VD: "15/01/2026")
@@ -75,6 +175,18 @@ class NoteProvider extends ChangeNotifier {
             note.content.toLowerCase().contains(_searchQuery.toLowerCase());
       }).toList();
     }
+
+    // //     // Sort by isPinned (true comes first), then by createdAt (newest first)
+    // filteredNotes.sort((a, b) {
+    //   if (a.isPinned && !b.isPinned) {
+    //     return -1; // a comes first
+    //   } else if (!a.isPinned && b.isPinned) {
+    //     return 1; // b comes first
+    //   } else {
+    //     // Both are pinned or both are unpinned, sort by date
+    //     return b.createdAt.compareTo(a.createdAt);
+    //   }
+    // });
     return filteredNotes;
   }
 

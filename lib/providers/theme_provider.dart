@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mood_journal/services/settings_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
@@ -8,6 +9,25 @@ class ThemeProvider extends ChangeNotifier {
 
   ThemeProvider() {
     _loadThemeMode();
+    loadBackground();
+  }
+
+  String? _currentBackground;
+  final SettingsService _settingsService = SettingsService();
+
+  String? get currentBackground => _currentBackground;
+
+  // Tải hình nền từ máy khi khởi động app
+  Future<void> loadBackground() async {
+    _currentBackground = await _settingsService.getTheme();
+    notifyListeners(); // Thông báo cho HomeScreen cập nhật ảnh mới
+  }
+
+  // Cập nhật hình nền mới từ ThemeScreen
+  Future<void> updateBackground(String path) async {
+    await _settingsService.saveTheme(path);
+    _currentBackground = path;
+    notifyListeners(); // Các màn hình đang dùng ảnh nền sẽ đổi ngay lập tức
   }
 
   Future<void> _loadThemeMode() async {
