@@ -10,11 +10,13 @@ import 'package:mood_journal/models/note_model.dart';
 import 'package:mood_journal/pages/calendar_screen.dart';
 import 'package:mood_journal/providers/note_provider.dart';
 import 'package:mood_journal/providers/settings_provider.dart';
+import 'package:mood_journal/providers/theme_provider.dart';
 import 'package:mood_journal/screens/bottom_navi/account_screen.dart';
 import 'package:mood_journal/screens/bottom_navi/insights_screen.dart';
 import 'package:mood_journal/screens/home/theme_screen.dart';
 import 'package:mood_journal/screens/note_edit/note_edit.dart';
 import 'package:mood_journal/screens/search/search_screen.dart';
+import 'package:mood_journal/services/settings_service.dart';
 import 'package:mood_journal/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 
@@ -70,6 +72,17 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  // Sửa lỗi Hot Reload: Khởi tạo lazy với 'late final'.
+  // Hàm _getUserName sẽ chỉ được gọi một lần khi _userNameFuture được truy cập lần đầu.
+  late final Future<String?> _userNameFuture = _getUserName();
+
+  Future<String?> _getUserName() async {
+    final settingsService = SettingsService();
+    return await settingsService.getUserName();
+  }
+
+  // initState không còn cần thiết để khởi tạo future này nữa.
+
   Widget _getActiveScreen() {
     switch (_selectedIndex) {
       case 0:
@@ -171,28 +184,44 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHomeContent() {
-    return Column(
-      children: [
-        _buildHeaderStack(),
-        Expanded(child: _buildBody()),
-      ],
+    return Consumer<ThemeProvider>(
+      builder: (context, theme, child) {
+        final isDark = theme.themeMode == ThemeMode.dark;
+        final bgImage = theme.currentBackground;
+
+        return Column(
+          children: [
+            // Truyền trực tiếp bgImage vào để hiển thị tức thì
+            _buildHeaderStack(bgImage, isDark),
+            Expanded(child: _buildBody()),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildHeaderStack() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  Widget _buildHeaderStack(bgImage, isDark) {
+    // final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Stack(
       alignment: Alignment.center,
       children: [
-        Container(
-          width: double.infinity,
-          height: 180,
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/images/banner.png'),
-              fit: BoxFit.cover,
-            ),
-          ),
+        Selector<ThemeProvider, String?>(
+          selector: (_, provider) => provider.currentBackground,
+          builder: (context, currentBg, child) {
+            return Container(
+              width: double.infinity,
+              height: 180,
+              decoration: currentBg != null
+                  ? BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage(currentBg),
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : const BoxDecoration(color: Colors.grey),
+            );
+          },
         ),
         SizedBox(width: 10),
         Column(
@@ -206,24 +235,24 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 const SizedBox(width: 20),
                 //Avatar
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        spreadRadius: 2,
-                        blurRadius: 5,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: CircleAvatar(
-                    backgroundImage: AssetImage('assets/images/welcome_1.png'),
-                  ),
-                ),
+                // Container(
+                //   width: 50,
+                //   height: 50,
+                //   decoration: BoxDecoration(
+                //     shape: BoxShape.circle,
+                //     boxShadow: [
+                //       BoxShadow(
+                //         color: Colors.black.withOpacity(0.2),
+                //         spreadRadius: 2,
+                //         blurRadius: 5,
+                //         offset: const Offset(0, 4),
+                //       ),
+                //     ],
+                //   ),
+                //   child: CircleAvatar(
+                //     backgroundImage: AssetImage('assets/images/welcome_1.png'),
+                //   ),
+                // ),
                 const SizedBox(width: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,14 +274,28 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
 
-                    // Tên người dùng
-                    Text(
-                      'Hello, Văn Huỳnh', // tên người dùng
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
-                      ),
+                    // Tên người dùng - ĐÃ SỬA BẰNG FUTUREBUILDER
+                    FutureBuilder<String?>(
+                      future: _userNameFuture,
+                      builder: (context, snapshot) {
+                        final style = const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        );
+
+                        if (snapshot.connectionState == ConnectionState.done) {
+                          if (snapshot.hasData &&
+                              snapshot.data != null &&
+                              snapshot.data!.isNotEmpty) {
+                            return Text(snapshot.data!, style: style);
+                          }
+                          // Nếu không có data hoặc data rỗng, hiển thị tên mặc định
+                          return Text('My Friend', style: style);
+                        }
+                        // Trong khi chờ, có thể hiển thị một placeholder ngắn
+                        return Text('...', style: style);
+                      },
                     ),
                   ],
                 ),
@@ -485,27 +528,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-  // Widget _buildListView(List<NoteModel> notes) {
-  //   return AnimationLimiter(
-  //     child: ListView.builder(
-  //       padding: EdgeInsets.all(16),
-  //       itemCount: notes.length,
-  //       itemBuilder: (context, index) {
-  //         final note = notes[index];
-  //         return AnimationConfiguration.staggeredList(
-  //           position: index,
-  //           duration: const Duration(milliseconds: 375),
-  //           child: SlideAnimation(
-  //             verticalOffset: 50.0,
-  //             child: FadeInAnimation(
-  //               child: Padding(
-  //                 padding: EdgeInsets.only(bottom: 12),
-  //                 child: NoteCard(note: notes[index]),
-  //               ),
-  //             ),
-  //           ),
-  //         );
-  //       },
-  //     ),
-  //   );
-  // }

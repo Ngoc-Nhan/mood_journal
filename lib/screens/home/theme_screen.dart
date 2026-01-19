@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mood_journal/providers/theme_provider.dart';
 import 'package:mood_journal/services/settings_service.dart';
+import 'package:provider/provider.dart';
 
 class ThemeScreen extends StatefulWidget {
   const ThemeScreen({super.key});
@@ -9,14 +11,9 @@ class ThemeScreen extends StatefulWidget {
 }
 
 class _ThemeScreenState extends State<ThemeScreen> {
-  final SettingsService _settingsService = SettingsService();
-  String? _currentTheme;
-  bool _isDarkMode = false;
-
   @override
   void initState() {
     super.initState();
-    _loadCurrentTheme();
   }
 
   final List<String> themeImages = [
@@ -33,32 +30,28 @@ class _ThemeScreenState extends State<ThemeScreen> {
     'assets/images/theme11.gif',
   ];
 
-  // Tải hình nền hiện tại từ bộ nhớ máy
-  Future<void> _loadCurrentTheme() async {
-    final theme = await _settingsService.getTheme();
-    setState(() {
-      _currentTheme = theme;
-    });
-  }
-
   // Logic lưu hình nền mới
   Future<void> _updateTheme(String path) async {
-    await _settingsService.saveTheme(path);
-    setState(() {
-      _currentTheme = path;
-    });
+    // Sử dụng context.read để không lắng nghe thay đổi, chỉ gọi hàm
+    context.read<ThemeProvider>().updateBackground(path);
 
     // Thông báo cho người dùng
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Đã cập nhật hình nền thành công!'),
-        duration: Duration(seconds: 1),
-      ),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đã cập nhật hình nền thành công!'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Lấy theme provider và current theme từ context
+    final themeProvider = context.watch<ThemeProvider>();
+    final currentTheme = themeProvider.currentBackground;
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -82,10 +75,11 @@ class _ThemeScreenState extends State<ThemeScreen> {
               contentPadding: EdgeInsets.zero,
               title: const Text('Dark mode', style: TextStyle(fontSize: 16)),
               trailing: Switch(
-                value: _isDarkMode,
+                value: themeProvider.themeMode == ThemeMode.dark,
                 onChanged: (value) {
-                  setState(() => _isDarkMode = value);
-                  // Thêm logic chuyển theme app tại đây nếu cần
+                  themeProvider.setThemeMode(
+                    value ? ThemeMode.dark : ThemeMode.light,
+                  );
                 },
               ),
             ),
@@ -102,7 +96,7 @@ class _ThemeScreenState extends State<ThemeScreen> {
                 itemCount: themeImages.length,
                 itemBuilder: (context, index) {
                   final imagePath = themeImages[index];
-                  final isSelected = _currentTheme == imagePath;
+                  final isSelected = currentTheme == imagePath;
 
                   return GestureDetector(
                     onTap: () => _updateTheme(imagePath),

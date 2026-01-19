@@ -9,8 +9,7 @@ import '../bottom_nav_layout.dart';
 // }
 
 class WelcomePage extends StatefulWidget {
-  final String name;
-  const WelcomePage({super.key, required this.name});
+  const WelcomePage({super.key});
 
   @override
   State<WelcomePage> createState() => _WelcomePageState();

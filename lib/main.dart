@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mood_journal/components/onboarding/start_screen.dart';
 // import 'package:mood_journal/components/onboarding/start_screen.dart';
 import 'package:mood_journal/db/database_helper.dart';
 import 'package:mood_journal/pages/pin_login_page.dart';
@@ -37,19 +38,34 @@ void main() async {
     SystemUiOverlayStyle(statusBarColor: Colors.transparent),
   );
 
-  runApp(MyApp(showOnboarding: isFirstTime, hasPin: hasPin));
+  final themeProvider = ThemeProvider();
+  await themeProvider.loadBackground();
+  runApp(
+    MyApp(
+      showOnboarding: isFirstTime,
+      hasPin: hasPin,
+      themeProvider: themeProvider,
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   final bool showOnboarding;
   final bool hasPin;
-  const MyApp({super.key, required this.showOnboarding, required this.hasPin});
+  final ThemeProvider themeProvider;
+
+  const MyApp({
+    super.key,
+    required this.showOnboarding,
+    required this.hasPin,
+    required this.themeProvider,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider.value(value: themeProvider),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(
           create: (_) => NoteProvider(repository: NoteRepository()),
@@ -68,7 +84,7 @@ class MyApp extends StatelessWidget {
             // home:
             // Quyết định màn hình đầu tiên dựa trên việc có PIN hay không
             home: showOnboarding
-                ? const SetupPage()
+                ? const WelcomeScreen()
                 : hasPin
                 ? const PinLoginPage()
                 : const HomeScreen(),

@@ -10,9 +10,7 @@ class NoteDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(note.title ?? 'Note Detail'),
-      ),
+      appBar: AppBar(title: Text(note.title ?? 'Note Detail')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -29,10 +27,7 @@ class NoteDetailPage extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               note.title ?? 'No Title',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 24,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
             ),
             const SizedBox(height: 8),
             const Divider(),

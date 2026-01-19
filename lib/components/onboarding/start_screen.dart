@@ -30,12 +30,12 @@ class WelcomeScreen extends StatelessWidget {
                   ),
 
                   Positioned(
-                    top: 80,
+                    top: 100,
                     child: Column(
                       children: [
                         Text(
                           'THE INNER',
-                          style: Theme.of(context).textTheme.headlineMedium
+                          style: Theme.of(context).textTheme.displayMedium
                               ?.copyWith(
                                 fontWeight: FontWeight.w300,
                                 letterSpacing: 2,
@@ -44,7 +44,7 @@ class WelcomeScreen extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           'SANCTUARY',
-                          style: Theme.of(context).textTheme.headlineLarge
+                          style: Theme.of(context).textTheme.displayLarge
                               ?.copyWith(
                                 color: const Color(0xFFD9A5A5),
                                 fontWeight: FontWeight.w600,

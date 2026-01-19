@@ -326,9 +326,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                                     Text(
                                       noteProvider.insightsSummary ??
                                           'Hãy viết gì đó để Liptwo có thể trò chuyện cùng bạn nhé!',
-                                      style: isDark
-                                          ? TextStyle(color: Colors.black)
-                                          : TextStyle(color: Colors.white),
+                                      style: TextStyle(color: Colors.black),
                                     ),
                                     SizedBox(height: 4),
                                   ],
