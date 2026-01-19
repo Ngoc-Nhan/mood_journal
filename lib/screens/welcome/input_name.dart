@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mood_journal/screens/home/home_screen.dart';
-// import '../../components/bottom_nav_layout.dart';
 
 class InputInfo extends StatelessWidget {
   InputInfo({super.key});
@@ -52,11 +51,9 @@ class InputInfo extends StatelessWidget {
                     onPressed: () {
                       final name = nameController.text.trim();
                       if (name.isEmpty) return;
-                      Navigator.push(
+                      Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => HomeScreen(name: name),
-                        ),
+                        MaterialPageRoute(builder: (context) => HomeScreen()),
                       );
 
                       // Navigator.pushReplacement(

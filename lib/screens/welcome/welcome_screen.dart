@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../welcome/input_name.dart';
-// import '../home/home_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -23,7 +22,7 @@ class WelcomeScreen extends StatelessWidget {
                 children: [
                   // ====== ẢNH NỀN ======
                   Image.asset(
-                    'assets/images/welcome.png',
+                    'assets/images/welcome_1.png',
                     width: double.infinity,
                     fit: BoxFit.cover,
                     alignment: Alignment.center,

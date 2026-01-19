@@ -6,9 +6,9 @@ import '../screens/bottom_navi/insights_screen.dart';
 import '../screens/bottom_navi/sound_screen.dart';
 
 class BottomNavLayout extends StatefulWidget {
-  final String userName;
+  final String name;
 
-  const BottomNavLayout({super.key, required this.userName});
+  const BottomNavLayout({super.key, required this.name});
 
   @override
   State<BottomNavLayout> createState() => _BottomNavLayoutState();
@@ -18,15 +18,18 @@ class _BottomNavLayoutState extends State<BottomNavLayout> {
   int _currentIndex = 0;
   late final List<Widget> pages;
 
+  final Color activeColor = const Color(0xFFF8B4B4);
+  final Color inactiveColor = Colors.black54;
+
   @override
   void initState() {
     super.initState();
     pages = [
-      HomeScreen(name: widget.userName),
+      HomeScreen(),
       const ExploreScreen(),
       const SoundScreen(),
       const InsightsScreen(),
-      AccountScreen(name: widget.userName),
+      AccountScreen(name: widget.name),
     ];
   }
 
@@ -34,11 +37,12 @@ class _BottomNavLayoutState extends State<BottomNavLayout> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+
       body: IndexedStack(index: _currentIndex, children: pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (i) => setState(() => _currentIndex = i),
-        type: BottomNavigationBarType.fixed,
+        type: BottomNavigationBarType.shifting,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),

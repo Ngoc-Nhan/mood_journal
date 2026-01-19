@@ -1,6 +1,18 @@
-
+// import 'package:typewritertext/typewritertext.dart';
 import 'package:flutter/material.dart';
-import '../../models/mood_selector.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:intl/intl.dart';
+import 'package:mood_journal/components/gridview/note_card.dart';
+import 'package:mood_journal/components/gridview/time_line_grid_group.dart';
+import 'package:mood_journal/components/listview/time_line_group.dart';
+import 'package:mood_journal/models/note_model.dart';
+import 'package:mood_journal/pages/calendar_screen.dart';
+import 'package:mood_journal/providers/note_provider.dart';
+import 'package:mood_journal/providers/settings_provider.dart';
+import 'package:mood_journal/screens/note_edit/note_edit.dart';
+import 'package:mood_journal/theme/app_colors.dart';
+import 'package:provider/provider.dart';
 
 String getGreeting() {
   final hour = DateTime.now().hour;
@@ -38,294 +50,281 @@ Widget iconSection() {
     ),
   );
 }
+// final List<Widget> _pages = [
+//   const HomeContent(), // Extract your current body logic to this widget
+//   const CalendarScreen(),
+//   const InsightScreen(),
+//   const AccountScreen(),
+// ];
 
-final List<String> days = ['Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat', 'Sun'];
-final List<IconData?> moodData = [
-  Icons.local_fire_department_outlined, // Mon
-  Icons.local_fire_department_outlined, // Tue
-  Icons.local_fire_department_outlined, // Wed
-  null, // Thur
-  null, // Fri
-  null, // Sat
-  null, // Sun
-];
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
-class HomeScreen extends StatelessWidget {
-  final String name;
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
-  const HomeScreen({super.key, required this.name});
+class _HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0;
+  Widget _getActiveScreen() {
+    switch (_selectedIndex) {
+      case 0:
+        return _buildHomeContent(); // Your original Banner + Notes List
+      case 1:
+        return const CalendarScreen();
+      case 3:
+        return const Center(child: Text("Insights Screen - Coming Soon"));
+      case 4:
+        return const Center(child: Text("Account Screen - Coming Soon"));
+      default:
+        return _buildHomeContent();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.max,
-      children: [
-        Stack(
-          alignment: AlignmentGeometry.center,
-          children: [
-            SizedBox(
-              width: double.infinity,
-              height: 280,
-              // decoration: BoxDecoration(border: Border.all(width: 2)),
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
+      // STEP 2: The Body dynamically changes based on _selectedIndex
+      body: SafeArea(child: _getActiveScreen()),
+
+      // STEP 3: Centered Floating Action Button
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.primaryVariant,
+        shape: const CircleBorder(),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => NoteEditorScreen(editMode: true, note: null),
             ),
-            Positioned(
-              top: 0,
-              right: 0,
-              left: 0,
-              child: Stack(
-                alignment: AlignmentGeometry.center,
-                children: [
-                  Container(
-                    width: double.infinity,
-                    height: 210,
-                    decoration: const BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage('assets/images/banner.png'),
-                        fit: BoxFit.cover,
+          ).then((_) {
+            Provider.of<NoteProvider>(context, listen: false).loadNotes();
+          });
+        },
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+
+      // STEP 4: Custom Bottom App Bar
+      bottomNavigationBar: _buildBottomAppBar(),
+    );
+  }
+  // --- UI COMPONENTS ---
+
+  Widget _buildBottomAppBar() {
+    return BottomAppBar(
+      notchMargin: 10,
+      elevation: 20,
+
+      // shape: const CircularNotchedRectangle(),
+      color: Colors.white,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              _buildNavItem(Icons.home_rounded, 'Home', 0),
+              _buildNavItem(Icons.calendar_month_rounded, 'Calendar', 1),
+            ],
+          ),
+          Row(
+            children: [
+              _buildNavItem(Icons.insights_rounded, 'Insight', 3),
+              _buildNavItem(Icons.person_rounded, 'Account', 4),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    bool isSelected = _selectedIndex == index;
+    return MaterialButton(
+      shape: const CircleBorder(),
+      minWidth: 40,
+      onPressed: () => setState(() => _selectedIndex = index),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: isSelected ? AppColors.primaryVariant : Colors.grey,
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: isSelected ? AppColors.primaryVariant : Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHomeContent() {
+    return Column(
+      children: [
+        _buildHeaderStack(),
+        Expanded(child: _buildBody()),
+      ],
+    );
+  }
+
+  Widget _buildHeaderStack() {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Container(
+          width: double.infinity,
+          height: 180,
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/banner.png'),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        SizedBox(width: 10),
+        Column(
+          mainAxisSize: MainAxisSize.max,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.max,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(width: 20),
+                //Avatar
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        spreadRadius: 2,
+                        blurRadius: 5,
+                        offset: const Offset(0, 4),
                       ),
-                    ),
+                    ],
                   ),
-
-                  Column(
-                    mainAxisSize: MainAxisSize.max,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.max,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const SizedBox(width: 20),
-                          //Avatar
-                          Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  spreadRadius: 2,
-                                  blurRadius: 5,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: CircleAvatar(
-                              backgroundImage: AssetImage(
-                                'assets/images/welcome.png',
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Lời chào
-                              Text(
-                                getGreeting(),
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w300,
-                                  color: Colors.black,
-                                  shadows: [
-                                    Shadow(
-                                      offset: Offset(0, 1),
-                                      blurRadius: 3,
-                                      color: Colors.black26,
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              // Tên người dùng
-                              Text(
-                                'Hello, $name', // tên người dùng
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(width: 40),
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.7),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.notifications_none,
-                              color: Colors.grey.shade800,
-                              size: 28,
-                            ),
+                  child: CircleAvatar(
+                    backgroundImage: AssetImage('assets/images/welcome_1.png'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Lời chào
+                    Text(
+                      getGreeting(),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w300,
+                        color: Colors.black,
+                        shadows: [
+                          Shadow(
+                            offset: Offset(0, 1),
+                            blurRadius: 3,
+                            color: Colors.black26,
                           ),
                         ],
                       ),
-                      Container(
-                        margin: EdgeInsets.all(10),
-                        child: ElevatedButton.icon(
-                          label: Text('1'),
-                          onPressed: () {},
-                          style: ButtonStyle(
-                            backgroundColor: WidgetStatePropertyAll(
-                              Colors.white,
-                            ),
-                            foregroundColor: WidgetStatePropertyAll(Colors.red),
-                            minimumSize: WidgetStatePropertyAll(Size.zero),
-                            maximumSize: WidgetStatePropertyAll(Size(300, 300)),
-                          ),
-                          icon: Icon(
-                            Icons.local_fire_department_outlined,
-                            color: Colors.red,
-                            size: 30,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Positioned(
-              bottom: 0, // Dính chặt vào đáy của Stack (Header)
-              left: 0,
-              right: 0,
-              child: Container(
-                height: 30, // Độ cao của phần bo góc
-                decoration: BoxDecoration(
-                  color: Colors.white, // Màu trắng của phần body bên dưới
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(30), // Chỉ bo góc trên bên trái
-                    topRight: Radius.circular(30), // Chỉ bo góc trên bên phải
-                  ),
-                ),
-              ),
-            ),
+                    ),
 
-            // Positioned(top: 0, left: 0, right: 0, child: iconSection()),
-            Positioned(
-              bottom: 0,
-              // top: 0,
-              left: 0,
-              right: 0,
-              child: const MoodSelector(),
-            ),
-          ],
-        ),
-        Text(
-          "How are you feeling today?",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        const SizedBox(height: 10),
-        Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.all(20),
-                  child: GridView.count(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 15,
-                    mainAxisSpacing: 15,
-                    childAspectRatio: 1.6,
-                    children: [
-                      _buildActionCard(
-                        "Talk with AI",
-                        Icons.edit,
-                        Colors.pink[50]!,
+                    // Tên người dùng
+                    Text(
+                      'Hello, Văn Huỳnh', // tên người dùng
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
                       ),
-                      _buildActionCard("Plan", Icons.place, Colors.green[50]!),
-                      _buildActionCard(
-                        "Read",
-                        Icons.menu_book,
-                        Colors.blue[50]!,
-                      ),
-                      _buildActionCard(
-                        "Journey",
-                        Icons.edit_note,
-                        Colors.purple[50]!,
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-
-                const SizedBox(height: 10),
+                SizedBox(width: 40),
                 Container(
-                  margin: EdgeInsets.symmetric(horizontal: 25),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 1. Tiêu đề
-                      Text(
-                        "Mood history",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      // 2. Dòng các thứ trong tuần
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: days
-                            .map(
-                              (day) => Expanded(
-                                child: Center(
-                                  child: Text(
-                                    day,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                      ),
-                      SizedBox(height: 15),
-
-                      // 3. Khung chứa Icon Mood
-                      Container(
-                        padding: EdgeInsets.symmetric(vertical: 20),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.grey.shade400,
-                            width: 1,
-                          ),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: moodData
-                              .map(
-                                (icon) => Expanded(
-                                  child: Center(
-                                    child: icon != null
-                                        ? Icon(
-                                            icon,
-                                            color: Colors.red,
-                                            size: 35,
-                                          ) // Thay bằng Image.asset nếu có icon riêng
-                                        : SizedBox(
-                                            height: 35,
-                                          ), // Ô trống nếu không có dữ liệu
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                        ),
-                      ),
-                    ],
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.7),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.palette,
+                    color: const Color.fromARGB(255, 227, 149, 149),
+                    size: 25,
                   ),
                 ),
               ],
+            ),
+            Container(
+              margin: EdgeInsets.all(10),
+              child: ElevatedButton.icon(
+                label: Text('1'),
+                onPressed: () {},
+                style: ButtonStyle(
+                  backgroundColor: WidgetStatePropertyAll(Colors.white),
+                  foregroundColor: WidgetStatePropertyAll(Colors.red),
+                  minimumSize: WidgetStatePropertyAll(Size.zero),
+                  maximumSize: WidgetStatePropertyAll(Size(300, 300)),
+                ),
+                icon: Icon(
+                  Icons.local_fire_department_outlined,
+                  color: Colors.red,
+                  size: 30,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 30,
+            decoration: const BoxDecoration(
+              color: Color(0xFFF5F5F5),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(30),
+                topRight: Radius.circular(30),
+              ),
+            ),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      // Navigator.push(context, MaterialPageRoute(builder: (_) => SearchScreen(); )),
+                    },
+                    icon: Icon(Icons.search),
+                  ),
+
+                  Consumer<SettingsProvider>(
+                    builder: (context, settings, _) {
+                      return IconButton(
+                        onPressed: () {
+                          settings.setViewMode(!settings.isGridView);
+                        },
+                        icon: Icon(
+                          settings.isGridView ? Icons.grid_view : Icons.list,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -333,27 +332,157 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionCard(String title, IconData icon, Color bgColor) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(10),
+  Widget _buildBody() {
+    return Consumer2<NoteProvider, SettingsProvider>(
+      builder: (context, noteProvider, settings, _) {
+        if (noteProvider.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        var notes = noteProvider.notes;
+        final groupedNotes = noteProvider.groupedNotes;
+        if (notes.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Every moment is priceless.',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  'Save your thoughts and feelings \n in this journal!',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(color: Colors.grey[400]),
+                ),
+                SizedBox(height: 20),
+                Icon(
+                  Icons.note_add_outlined,
+                  size: 50,
+                  color: Colors.grey[400],
+                ),
+                SizedBox(height: 10),
+                Text('Create New Note'),
+              ],
             ),
-            child: Icon(icon, color: Colors.black54),
-          ),
-          SizedBox(height: 10),
-          Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
-        ],
-      ),
+          );
+        }
+        return settings.isGridView
+            ? _buildGridView(groupedNotes)
+            : _buildListView(groupedNotes);
+      },
     );
   }
+
+  // Widget _buildGridView(Map<String, List<NoteModel>> groupedData) {
+  //   return ListView.builder(
+  //     padding: const EdgeInsets.symmetric(horizontal: 12),
+  //     itemCount: groupedData.length,
+  //     itemBuilder: (context, index) {
+  //       String dateKey = groupedData.keys.elementAt(index);
+  //       List<NoteModel> notesInDay = groupedData[dateKey]!;
+  //       return TimelineGridGroup(dateKey: dateKey, notes: notesInDay);
+  //     },
+  //   );
+  // }
+  Widget _buildGridView(Map<String, List<NoteModel>> groupedData) {
+    return CustomScrollView(
+      slivers: groupedData.entries.map((entry) {
+        final dateKey = entry.key;
+        final notes = entry.value;
+
+        final parsedDate = DateFormat('dd/MM/yyyy').parse(dateKey);
+
+        return SliverMainAxisGroup(
+          slivers: [
+            // ===== HEADER NGÀY =====
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
+                child: Row(
+                  spacing: 5,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      DateFormat('dd').format(parsedDate),
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'thg ${parsedDate.month} ${parsedDate.year}',
+                      style: const TextStyle(fontSize: 15),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // ===== GRID NOTE =====
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              sliver: SliverMasonryGrid.count(
+                crossAxisCount: 2,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                childCount: notes.length,
+                itemBuilder: (context, index) {
+                  return NoteCard(note: notes[index]);
+                },
+              ),
+            ),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildListView(Map<String, List<NoteModel>> groupedData) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: groupedData.keys.length,
+      itemBuilder: (context, index) {
+        String dateKey = groupedData.keys.elementAt(index);
+        List<NoteModel> notesInDay = groupedData[dateKey]!;
+
+        return TimelineGroup(
+          // Widget TimelineGroup chúng ta đã viết trước đó
+          dateKey: dateKey,
+          notes: notesInDay,
+        );
+      },
+    );
+  }
+
+  // Widget _buildListView(List<NoteModel> notes) {
+  //   return AnimationLimiter(
+  //     child: ListView.builder(
+  //       padding: EdgeInsets.all(16),
+  //       itemCount: notes.length,
+  //       itemBuilder: (context, index) {
+  //         final note = notes[index];
+  //         return AnimationConfiguration.staggeredList(
+  //           position: index,
+  //           duration: const Duration(milliseconds: 375),
+  //           child: SlideAnimation(
+  //             verticalOffset: 50.0,
+  //             child: FadeInAnimation(
+  //               child: Padding(
+  //                 padding: EdgeInsets.only(bottom: 12),
+  //                 child: NoteCard(note: notes[index]),
+  //               ),
+  //             ),
+  //           ),
+  //         );
+  //       },
+  //     ),
+  //   );
+  // }
 }
