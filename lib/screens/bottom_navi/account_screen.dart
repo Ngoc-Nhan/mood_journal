@@ -10,6 +10,8 @@ import 'package:mood_journal/services/settings_service.dart';
 import 'package:mood_journal/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:mood_journal/providers/settings_provider.dart';
+
 import 'package:file_picker/file_picker.dart';
 
 class AccountScreen extends StatefulWidget {
@@ -21,51 +23,48 @@ class AccountScreen extends StatefulWidget {
 
 class _AccountScreenState extends State<AccountScreen> {
   // Sử dụng Future state để quản lý tên và cập nhật UI
-  late Future<String?> _userNameFuture;
+  // gọi api 1 lần k cập nhật liên tục
+  // late Future<String?> _userNameFuture;
   final _settingsService = SettingsService();
 
-  @override
-  void initState() {
-    super.initState();
-    _userNameFuture = _settingsService.getUserName();
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _userNameFuture = _settingsService.getUserName();
+  // }
 
-  void _updateUserName() {
-    setState(() {
-      _userNameFuture = _settingsService.getUserName();
-    });
-  }
+  // void _updateUserName() {
+  //   setState(() {
+  //     _userNameFuture = _settingsService.getUserName();
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      body: FutureBuilder<String?>(
-        future: _userNameFuture, // Sử dụng future từ state
-        builder: (context, snapshot) {
-          final displayName = snapshot.data ?? 'Bạn';
+      backgroundColor: isDark
+          ? AppColors.backgroundDark
+          : AppColors.backgroundLight,
+      body: SafeArea(
+        //widget lắng  nghe thay đổi từ SettingsProvider
+        child: Consumer<SettingsProvider>(
+          builder: (context, setting, _) {
+            final displayName = setting.userName ?? 'Bạn';
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 60),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    Text(
-                      'Xin chào, ',
-                      style: const TextStyle(
-                          fontSize: 24, fontWeight: FontWeight.w400),
-                    ),
-                    if (snapshot.connectionState == ConnectionState.waiting)
-                      const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 3))
-                    else
+            // future: _userNameFuture, // Sử dụng future từ state
+            // builder: (context, snapshot) {
+            // final displayName = snapshot.data ?? 'Bạn';
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 60),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      const Text('Xin chào, ', style: TextStyle(fontSize: 24)),
                       Text(
                         displayName,
                         style: const TextStyle(
@@ -73,85 +72,90 @@ class _AccountScreenState extends State<AccountScreen> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                    const Text('!', style: TextStyle(fontSize: 24)),
-                  ],
+                      const Text('!', style: TextStyle(fontSize: 24)),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 40),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  children: [
-                    _SectionHeader(title: 'Account & Appearance'),
-                    // Change Name
-                    ListTile(
-                      leading: const Icon(Icons.person_outline),
-                      title: const Text('Change Name'),
-                      onTap: () => _showChangeNameDialog(context),
-                    ),
-                    // Change PIN
-                    ListTile(
-                      leading: const Icon(Icons.lock_outline),
-                      title: const Text('Security'),
-                      subtitle: const Text('Setup or change your PIN'),
-                      onTap: () => _showChangePinDialog(context),
-                    ),
-                    // Customize Background
-                    ListTile(
-                      leading: const Icon(Icons.palette_outlined),
-                      title: const Text('Customize Background'),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const ThemeScreen()),
-                        );
-                      },
-                    ),
-                    // Dark/Light Theme Mode
-                    Consumer<ThemeProvider>(
-                      builder: (context, themeProvider, _) {
-                        return ListTile(
-                          leading: const Icon(Icons.brightness_6_outlined),
-                          title: const Text('Theme'),
-                          subtitle:
-                              Text(_getThemeModeText(themeProvider.themeMode)),
-                          onTap: () {
-                            _showThemeModeDialog(context, themeProvider);
-                          },
-                        );
-                      },
-                    ),
-                    const Divider(),
-                    _SectionHeader(title: 'Data Management'),
-                    ListTile(
-                      leading: const Icon(Icons.file_upload_outlined),
-                      title: const Text('Export Notes'),
-                      subtitle: const Text('Export all notes as JSON file'),
-                      onTap: () => _exportNotes(context),
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.file_download_outlined),
-                      title: const Text('Import Notes'),
-                      subtitle: const Text('Import notes from JSON file'),
-                      onTap: () => _importNotes(context),
-                    ),
-                    const Divider(),
-                    _SectionHeader(title: 'About'),
-                    const ListTile(
-                      leading: Icon(Icons.info_outline),
-                      title: Text('Version'),
-                      subtitle: Text('1.0.0'),
-                    ),
-                    const ListTile(
-                      leading: Icon(Icons.help_outline),
-                      title: Text('Help'),
-                    ),
-                  ],
+
+                const SizedBox(height: 40),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    children: [
+                      _SectionHeader(title: 'Account & Appearance'),
+                      // Change Name
+                      ListTile(
+                        leading: const Icon(Icons.person_outline),
+                        title: const Text('Change Name'),
+                        onTap: () => _showChangeNameDialog(context),
+                      ),
+                      // Change PIN
+                      ListTile(
+                        leading: const Icon(Icons.lock_outline),
+                        title: const Text('Security'),
+                        subtitle: const Text('Setup or change your PIN'),
+                        onTap: () => _showChangePinDialog(context),
+                      ),
+                      // Customize Background
+                      ListTile(
+                        leading: const Icon(Icons.palette_outlined),
+                        title: const Text('Customize Background'),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ThemeScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      // Dark/Light Theme Mode
+                      Consumer<ThemeProvider>(
+                        builder: (context, themeProvider, _) {
+                          return ListTile(
+                            leading: const Icon(Icons.brightness_6_outlined),
+                            title: const Text('Theme'),
+                            subtitle: Text(
+                              _getThemeModeText(themeProvider.themeMode),
+                            ),
+                            onTap: () {
+                              _showThemeModeDialog(context, themeProvider);
+                            },
+                          );
+                        },
+                      ),
+                      const Divider(),
+                      _SectionHeader(title: 'Data Management'),
+                      ListTile(
+                        leading: const Icon(Icons.file_upload_outlined),
+                        title: const Text('Export Notes'),
+                        subtitle: const Text('Export all notes as JSON file'),
+                        onTap: () => _exportNotes(context),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.file_download_outlined),
+                        title: const Text('Import Notes'),
+                        subtitle: const Text('Import notes from JSON file'),
+                        onTap: () => _importNotes(context),
+                      ),
+                      const Divider(),
+                      _SectionHeader(title: 'About'),
+                      const ListTile(
+                        leading: Icon(Icons.info_outline),
+                        title: Text('Version'),
+                        subtitle: Text('1.0.0'),
+                      ),
+                      const ListTile(
+                        leading: Icon(Icons.help_outline),
+                        title: Text('Help'),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -177,9 +181,12 @@ class _AccountScreenState extends State<AccountScreen> {
             TextButton(
               onPressed: () async {
                 if (nameController.text.isNotEmpty) {
-                  await _settingsService.saveUserName(nameController.text);
+                  context.read<SettingsProvider>().setUserName(
+                    nameController.text.trim(),
+                  );
+
                   Navigator.pop(context);
-                  _updateUserName(); // Cập nhật lại UI
+                  // Cập nhật lại UI
                 }
               },
               child: const Text('Save'),
@@ -217,9 +224,12 @@ class _AccountScreenState extends State<AccountScreen> {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content: Text(hasPin
+                      content: Text(
+                        hasPin
                             ? 'PIN changed successfully!'
-                            : 'PIN set successfully!')),
+                            : 'PIN set successfully!',
+                      ),
+                    ),
                   );
                 }
               },
@@ -525,4 +535,3 @@ String _getThemeModeText(ThemeMode themeMode) {
       return 'Dark';
   }
 }
-

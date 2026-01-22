@@ -1,8 +1,47 @@
 import 'package:flutter/material.dart';
 import '../welcome/input_name.dart';
+// import './screens/home/home_screen.dart';
+import '../../screens/home/home_screen.dart';
+import '../../services/settings_service.dart';
+import '../../pages/pin_login_page.dart';
 
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
+
+  @override
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _checkUserName();
+  }
+
+  Future<void> _checkUserName() async {
+    final settingsService = SettingsService();
+    final hasName = await settingsService.hasUserName();
+
+    if (!mounted) return;
+
+    if (hasName) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
+    }
+    if (hasName) {
+      final hasPin = await settingsService.hasPin();
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => hasPin ? const PinLoginPage() : const HomeScreen(),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

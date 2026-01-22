@@ -28,9 +28,11 @@ void main() async {
   // // Mặc định là true nếu chưa từng lưu giá trị này (lần đầu cài app)
   // final bool showOnboarding = prefs.getBool('showOnboarding') ?? true;
   // Khởi tạo service
+  // đọc tên khi mở app
   final settingsService = SettingsService();
-  final settings = SettingsService();
-  final bool isFirstTime = await settings.isFirstTime();
+  final bool hasName = await settingsService.hasUserName();
+  // final settings = SettingsService();
+  final bool isFirstTime = await settingsService.isFirstTime();
   // Kiểm tra xem PIN có tồn tại không
   final bool hasPin = await settingsService.hasPin();
   await dotenv.load(fileName: ".env");
@@ -45,6 +47,7 @@ void main() async {
       showOnboarding: isFirstTime,
       hasPin: hasPin,
       themeProvider: themeProvider,
+      hasName: hasName,
     ),
   );
 }
@@ -53,24 +56,38 @@ class MyApp extends StatelessWidget {
   final bool showOnboarding;
   final bool hasPin;
   final ThemeProvider themeProvider;
+  final bool hasName;
 
   const MyApp({
     super.key,
     required this.showOnboarding,
     required this.hasPin,
     required this.themeProvider,
+    required this.hasName,
   });
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        // ChangeNotifireProvider(
+        //   create : (_)=> SettingsProvider()..loadUserName(),
+        // )
+        // ChangeNotifierProvider.value(value: themeProvider),
+        // ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        // ChangeNotifierProvider(
+        //   create: (_) => NoteProvider(repository: NoteRepository()),
+        // ),
+        // ChangeNotifierProvider(create: (_) => EditorProvider()),
+        ChangeNotifierProvider(
+          create: (_) => SettingsProvider()..loadUserName(),
+        ),
+
         ChangeNotifierProvider.value(value: themeProvider),
-        ChangeNotifierProvider(create: (_) => SettingsProvider()),
+
         ChangeNotifierProvider(
           create: (_) => NoteProvider(repository: NoteRepository()),
         ),
-        // ChangeNotifierProvider(create: (_) => EditorProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
@@ -82,15 +99,17 @@ class MyApp extends StatelessWidget {
             darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.themeMode,
             // home:
-            // Quyết định màn hình đầu tiên dựa trên việc có PIN hay không
-            home: showOnboarding
-                ? const WelcomeScreen()
-                : hasPin
-                ? const PinLoginPage()
-                : const HomeScreen(),
+            // Quyết định màn hình đầu tiên dựa trên việc có ten dang nhap  hay chua không
+            home: _getStartPage(),
           );
         },
       ),
     );
+  }
+
+  Widget _getStartPage() {
+    if (!hasName) return const WelcomeScreen();
+    if (hasPin) return const PinLoginPage();
+    return const HomeScreen();
   }
 }

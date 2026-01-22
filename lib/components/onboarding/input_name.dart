@@ -26,15 +26,12 @@ class _InputInfoState extends State<InputInfo> {
     super.dispose();
   }
 
-  void _onNext(BuildContext context) {
+  Future<void> _onNext(BuildContext context) async {
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
-    _settingsService.saveUserName(name);
+    await _settingsService.saveUserName(name);
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => ChoiceTheme()),
-    );
+    Navigator.pop(context, MaterialPageRoute(builder: (_) => ChoiceTheme()));
   }
 
   @override

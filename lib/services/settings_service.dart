@@ -1,6 +1,9 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+
+
+
 class SettingsService {
   // Dùng để lưu trữ an toàn
   final _secureStorage = const FlutterSecureStorage();
@@ -11,6 +14,7 @@ class SettingsService {
   static const _themeKey = 'user_theme_background';
   static const _isFirstTimeKey = 'is_first_time';
   // --- Quản lý PIN ---
+  
   Future<void> savePin(String pin) async {
     await _secureStorage.write(key: _pinKey, value: pin);
   }
@@ -37,6 +41,11 @@ class SettingsService {
   Future<String?> getUserName() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_nameKey);
+  }
+
+  Future<bool> hasUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.containsKey(_nameKey);
   }
 
   // --- Quản lý Theme (Hình nền) ---

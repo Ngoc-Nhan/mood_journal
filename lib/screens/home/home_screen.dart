@@ -201,7 +201,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeaderStack(bgImage, isDark) {
-    // final isDark = Theme.of(context).brightness == Brightness.dark;
+    // final isDark = Theme.of(context).brightness == Bri
+    // ghtness.dark;
+    final userName = context.watch<SettingsProvider>().userName;
 
     return Stack(
       alignment: Alignment.center,
@@ -209,17 +211,28 @@ class _HomeScreenState extends State<HomeScreen> {
         Selector<ThemeProvider, String?>(
           selector: (_, provider) => provider.currentBackground,
           builder: (context, currentBg, child) {
-            return Container(
-              width: double.infinity,
-              height: 180,
-              decoration: currentBg != null
-                  ? BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage(currentBg),
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                  : const BoxDecoration(color: Colors.grey),
+            return Stack(
+              children: [
+                Container(
+                  width: double.infinity,
+                  height: 180,
+                  decoration: currentBg != null
+                      ? BoxDecoration(
+                          image: DecorationImage(
+                            image: AssetImage(currentBg),
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : const BoxDecoration(color: Colors.grey),
+                ),
+                Container(
+                  width: double.infinity,
+                  height: 180,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                  ),
+                ),
+              ],
             );
           },
         ),
@@ -275,28 +288,37 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
 
                     // Tên người dùng - ĐÃ SỬA BẰNG FUTUREBUILDER
-                    FutureBuilder<String?>(
-                      future: _userNameFuture,
-                      builder: (context, snapshot) {
+                    Selector<SettingsProvider, String?>(
+                      selector: (_, provider) => provider.userName,
+                      builder: (context, currentNAme, snapshot) {
                         final style = const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
                           color: Colors.black,
                         );
 
-                        if (snapshot.connectionState == ConnectionState.done) {
-                          if (snapshot.hasData &&
-                              snapshot.data != null &&
-                              snapshot.data!.isNotEmpty) {
-                            return Text(snapshot.data!, style: style);
-                          }
+                        // if (snapshot.connectionState == ConnectionState.done) {
+                        if (currentNAme != null && currentNAme.isNotEmpty) {
+                          return Text(currentNAme, style: style);
+                        } else {
                           // Nếu không có data hoặc data rỗng, hiển thị tên mặc định
                           return Text('My Friend', style: style);
                         }
+                        // }
                         // Trong khi chờ, có thể hiển thị một placeholder ngắn
-                        return Text('...', style: style);
+                        // return Text('...', style: style);
                       },
                     ),
+                    // Text(
+                    //   userName == null || userName.isEmpty
+                    //       ? 'My Friend'
+                    //       : userName,
+                    //   style: const TextStyle(
+                    //     fontSize: 20,
+                    //     fontWeight: FontWeight.w600,
+                    //     color: Colors.black,
+                    //   ),
+                    // ),
                   ],
                 ),
                 SizedBox(width: 40),
