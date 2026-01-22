@@ -80,7 +80,9 @@ class MyApp extends StatelessWidget {
         // ),
         // ChangeNotifierProvider(create: (_) => EditorProvider()),
         ChangeNotifierProvider(
-          create: (_) => SettingsProvider()..loadUserName(),
+          create: (_) => SettingsProvider()
+            ..loadUserName()
+            ..updateStreakOnAppOpen(),
         ),
 
         ChangeNotifierProvider.value(value: themeProvider),

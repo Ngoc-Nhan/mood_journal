@@ -192,7 +192,11 @@ class _HomeScreenState extends State<HomeScreen> {
         return Column(
           children: [
             // Truyền trực tiếp bgImage vào để hiển thị tức thì
-            _buildHeaderStack(bgImage, isDark),
+            _buildHeaderStack(
+              bgImage,
+              isDark,
+              context.watch<SettingsProvider>(),
+            ),
             Expanded(child: _buildBody()),
           ],
         );
@@ -200,10 +204,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHeaderStack(bgImage, isDark) {
+  Widget _buildHeaderStack(bgImage, isDark, settings) {
     // final isDark = Theme.of(context).brightness == Bri
     // ghtness.dark;
     final userName = context.watch<SettingsProvider>().userName;
+    // khoi tao streak
+    final streak = settings.streak;
 
     return Stack(
       alignment: Alignment.center,
@@ -348,17 +354,29 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             Container(
-              margin: EdgeInsets.all(10),
+              margin: EdgeInsets.symmetric(vertical: 15),
               child: ElevatedButton.icon(
-                label: Text('1'),
+                label: Text(
+                  '$streak',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    // color: isDark ? Colors.white : Colors.black,
+                  ),
+                ),
                 onPressed: () {},
                 style: ButtonStyle(
                   backgroundColor: isDark
                       ? WidgetStatePropertyAll(Colors.black)
                       : WidgetStatePropertyAll(Colors.white),
+
                   foregroundColor: WidgetStatePropertyAll(Colors.red),
-                  minimumSize: WidgetStatePropertyAll(Size.zero),
-                  maximumSize: WidgetStatePropertyAll(Size(300, 300)),
+                  padding: WidgetStatePropertyAll(
+                    EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  // minimumSize: WidgetStatePropertyAll(Size(40, 40)),
+                  // maximumSize: WidgetStatePropertyAll(Size(100, 200)),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 icon: Icon(
                   Icons.local_fire_department_outlined,
