@@ -16,7 +16,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   void initState() {
     super.initState();
-    _checkUserName();
+
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   _checkUserName();
+    // });
   }
 
   Future<void> _checkUserName() async {
@@ -25,12 +28,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
     if (!mounted) return;
 
-    if (hasName) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
-    }
     if (hasName) {
       final hasPin = await settingsService.hasPin();
 
@@ -43,33 +40,25 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        // bottom: false,
-        child: Column(
-          // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Stack(
           children: [
-            // const SizedBox(height: 20),
-
-            //
-            Expanded(
-              flex: 5,
+            // ===== BACKGROUND + TITLE =====
+            Positioned.fill(
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // ====== ẢNH NỀN ======
                   Image.asset(
                     'assets/images/welcome_1.png',
-                    width: double.infinity,
                     fit: BoxFit.cover,
-                    alignment: Alignment.center,
+                    width: double.infinity,
                   ),
-
-                  // ====== CHỮ NẰM TRONG HÌNH ======
                   Positioned(
-                    top: 90, //  chỉnh cao thấp chữ
+                    top: 90,
                     child: Column(
                       children: const [
                         Text(
@@ -78,7 +67,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             fontSize: 40,
                             fontWeight: FontWeight.w300,
                             letterSpacing: 2,
-                            color: Colors.black,
                           ),
                         ),
                         SizedBox(height: 4),
@@ -96,6 +84,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 ],
               ),
             ),
+
 
             // Tiêu đề và mô tả
             // Column(

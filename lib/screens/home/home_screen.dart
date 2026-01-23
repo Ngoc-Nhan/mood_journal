@@ -19,6 +19,29 @@ import 'package:mood_journal/screens/search/search_screen.dart';
 import 'package:mood_journal/services/settings_service.dart';
 import 'package:mood_journal/theme/app_colors.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
+import 'package:mood_journal/models/note_model.dart';
+
+class NoteCard extends StatelessWidget {
+  final NoteModel note;
+
+  const NoteCard({super.key, required this.note});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Text(
+          note.content ?? '',
+          maxLines: 6,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    );
+  }
+}
 
 String getGreeting() {
   final hour = DateTime.now().hour;
@@ -86,17 +109,18 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _getActiveScreen() {
     switch (_selectedIndex) {
       case 0:
-        return _buildHomeContent(); // Your original Banner + Notes List
+        return _buildHomeContent();
       case 1:
         return const CalendarScreen();
-      case 3:
+      case 2:
         return const InsightsScreen();
-      case 4:
+      case 3:
         return const AccountScreen();
       default:
         return _buildHomeContent();
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

@@ -110,7 +110,7 @@ class MyApp extends StatelessWidget {
   }
 
   Widget _getStartPage() {
-    if (!hasName) return const WelcomeScreen();
+    if (!hasName) return  WelcomeScreen();
     if (hasPin) return const PinLoginPage();
     return const HomeScreen();
   }

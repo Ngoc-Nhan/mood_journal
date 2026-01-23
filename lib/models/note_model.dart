@@ -15,6 +15,7 @@ class NoteModel {
   final List<String> attachments;
   final String? contentJson;
   final bool isDeleted;
+  final String? mood;
 
   // 🔥 AI response
   final String? aiResponse;
@@ -38,7 +39,7 @@ class NoteModel {
 
     // 🔥 AI
     this.aiResponse,
-    this.aiResponseCreatedAt,
+    this.aiResponseCreatedAt, this.mood,
   }) : createdAt = createdAt ?? DateTime.now(),
        modifiedAt = modifiedAt ?? DateTime.now();
 
