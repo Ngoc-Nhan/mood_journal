@@ -18,6 +18,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'components/onboarding/welcome_page.dart';
+
 void main() async {
   // Đảm bảo Flutter đã được khởi tạo
   WidgetsFlutterBinding.ensureInitialized();
@@ -102,7 +104,8 @@ class MyApp extends StatelessWidget {
             themeMode: themeProvider.themeMode,
             // home:
             // Quyết định màn hình đầu tiên dựa trên việc có ten dang nhap  hay chua không
-            home: _getStartPage(),
+            // home: _getStartPage(),
+            home: const WelcomePage(),
           );
         },
       ),

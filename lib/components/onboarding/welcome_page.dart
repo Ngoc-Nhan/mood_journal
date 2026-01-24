@@ -2,11 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mood_journal/components/onboarding/onboarding_layout.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../screens/home/home_screen.dart';
-import '../bottom_nav_layout.dart';
-
-// class CardScreen extends StatelessWidget{
-//   const CardScreen
-// }
+import 'package:mood_journal/theme/app_colors.dart';
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
@@ -18,7 +14,6 @@ class WelcomePage extends StatefulWidget {
 class _WelcomePageState extends State<WelcomePage> {
   Future<void> _showOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
-    // Lưu trạng thái đã xem onboarding
     await prefs.setBool('showOnboarding', false);
   }
 
@@ -42,11 +37,11 @@ class _WelcomePageState extends State<WelcomePage> {
 
 class CardScreen extends StatelessWidget {
   const CardScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return Column(
-      children: [
+      children: const [
         CardItem(
           title: "Save the moment ",
           subtitle: 'Follow your change',
@@ -71,7 +66,9 @@ class CardItem extends StatelessWidget {
   final String title;
   final String subtitle;
   final String imagePath;
-  CardItem({
+
+  const CardItem({
+    super.key,
     required this.title,
     required this.subtitle,
     required this.imagePath,
@@ -79,37 +76,59 @@ class CardItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Màu nen co the thay doi
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // ===================================
+
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.pinkAccent),
         borderRadius: BorderRadius.circular(15),
-        color: Colors.white,
+        // color: Colors.white
+        color: isDark
+            ? AppColors.cardDark
+            : Colors.white,
       ),
       clipBehavior: Clip.antiAlias,
-
-      margin: EdgeInsets.only(bottom: 22),
+      margin: const EdgeInsets.only(bottom: 22),
       child: Row(
         children: [
           Container(
-            margin: EdgeInsets.all(2),
-            child: Image.asset(imagePath, height: 100, fit: BoxFit.cover),
+            margin: const EdgeInsets.all(2),
+            child: Image.asset(
+              imagePath,
+              height: 100,
+              fit: BoxFit.cover,
+            ),
           ),
           Expanded(
             child: Column(
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? AppColors.textLight
+                        : AppColors.textDark,
+                  ),
                 ),
-                SizedBox(height: 4),
-                Text(subtitle, style: TextStyle(fontSize: 18)),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: isDark
+                        ? AppColors.textSecondaryDark
+                        : AppColors.textSecondaryLight,
+                  ),
+                ),
               ],
             ),
           ),
         ],
       ),
     );
-
-    // TODO: implement build
   }
 }
