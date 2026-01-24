@@ -31,7 +31,7 @@ class _InputInfoState extends State<InputInfo> {
     if (name.isEmpty) return;
     await _settingsService.saveUserName(name);
 
-    Navigator.pop(context, MaterialPageRoute(builder: (_) => ChoiceTheme()));
+    Navigator.push(context, MaterialPageRoute(builder: (_) => ChoiceTheme()));
   }
 
   @override

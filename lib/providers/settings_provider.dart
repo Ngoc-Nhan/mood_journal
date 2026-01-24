@@ -14,6 +14,8 @@ class SettingsProvider extends ChangeNotifier {
   //khai báo steak
   int _streak = 0;
   int get streak => _streak;
+  List<String> _streakHistory = [];
+  List<String> get streakHistory => _streakHistory;
 
   SettingsProvider() {
     _loadSettings();
@@ -61,6 +63,7 @@ class SettingsProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('sort_order', order);
   }
+
   //load streak
   Future<void> loadStreak() async {
     final prefs = await SharedPreferences.getInstance();
@@ -69,26 +72,44 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   //update  streak
-  Future<void> updateStreakOnAppOpen() async {
+  Future<void> updateStreakOnAppActive() async {
     final prefs = await SharedPreferences.getInstance();
-    final lastOpen = prefs.getString('last_open_date');
-    final today = DateTime.now();
-    if (lastOpen != null) {
-      final lastDate = DateTime.parse(lastOpen);
-      final difference = today.difference(lastDate).inDays;
 
-      if (difference == 1) {
-        // Tăng streak nếu mở app vào ngày tiếp theo
+    _streak = prefs.getInt('user_streak') ?? 0;
+    // _streakHistory = prefs.getStringList('streak_history') ?? [];
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final todayStr = today.toIso8601String();
+
+    final lastActiveStr = prefs.getString('last_active_date');
+
+    if (lastActiveStr != null) {
+      final lastActive = DateTime.parse(lastActiveStr);
+      final lastDate = DateTime(lastActive.year, lastActive.month, lastActive.day);
+
+      final diff = today.difference(lastDate).inDays;
+
+      if (diff == 0) return; // mở lại cùng ngày
+      if (diff == 1) {
         _streak += 1;
-      } else if (difference > 1) {
-        // Reset streak nếu bỏ lỡ nhiều ngày
-        _streak = 0;
+      } else {
+        _streak = 1;
+        _streakHistory.clear(); // reset chuỗi cũ
       }
     } else {
-      // Lần đầu mở app
       _streak = 1;
     }
-    await prefs.setString('last_open_date', today.toIso8601String());
+
+    // 👉 lưu ngày hôm nay nếu chưa có
+    if (!_streakHistory.contains(todayStr)) {
+      _streakHistory.add(todayStr);
+    }
+
     await prefs.setInt('user_streak', _streak);
+    await prefs.setString('last_active_date', todayStr);
+    // await prefs.setStringList('streak_history', _streakHistory);
+
+    notifyListeners();
   }
 }

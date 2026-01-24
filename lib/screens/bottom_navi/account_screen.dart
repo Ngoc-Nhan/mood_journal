@@ -172,6 +172,7 @@ class _AccountScreenState extends State<AccountScreen> {
           content: TextField(
             controller: nameController,
             decoration: const InputDecoration(hintText: "Enter new name"),
+            
           ),
           actions: [
             TextButton(

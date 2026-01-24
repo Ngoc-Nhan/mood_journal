@@ -280,7 +280,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                           height: 100,
                           width: double.infinity,
                           child: Image.asset(
-                            'assets/images/insight_tipcard.png',
+                            'assets/images/Insight_tipcard.png',
                             fit: BoxFit.cover,
 
                             alignment: Alignment.topCenter,

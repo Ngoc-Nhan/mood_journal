@@ -36,6 +36,8 @@ void main() async {
   // Kiểm tra xem PIN có tồn tại không
   final bool hasPin = await settingsService.hasPin();
   await dotenv.load(fileName: ".env");
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle(statusBarColor: Colors.transparent),
   );
@@ -82,7 +84,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => SettingsProvider()
             ..loadUserName()
-            ..updateStreakOnAppOpen(),
+            ..updateStreakOnAppActive(),
         ),
 
         ChangeNotifierProvider.value(value: themeProvider),

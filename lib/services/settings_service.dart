@@ -75,4 +75,5 @@ class SettingsService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('streak', streak);
   }
+  
 }
