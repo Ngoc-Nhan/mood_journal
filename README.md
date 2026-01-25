@@ -15,9 +15,25 @@ A personal mood tracking application built with Flutter. Keep track of your dail
 
 ## 📸 Screenshots
 
-|       Home Screen        |         Add Entry          |         Statistics         |
-| :----------------------: | :------------------------: | :------------------------: |
-| ![alt](./flutter_01.png) | <!-- Insert Image Here --> | <!-- Insert Image Here --> |
+|                     Welcome                      |                    Add Entry                     |                       Pin                        |
+| :----------------------------------------------: | :----------------------------------------------: | :----------------------------------------------: |
+| <img src="./zimage/flutter_01.png" width="150"/> | <img src="./zimage/flutter_02.png" width="150"/> | <img src="./zimage/flutter_03.png" width="150"/> |
+
+|                    Edit Note                     |                   AI Response                    |                     Template                     |
+| :----------------------------------------------: | :----------------------------------------------: | :----------------------------------------------: |
+| <img src="./zimage/flutter_04.png" width="150"/> | <img src="./zimage/flutter_05.png" width="150"/> | <img src="./zimage/flutter_06.png" width="150"/> |
+
+|                  Info Template                   |                     Calendar                     |                     Insight                      |
+| :----------------------------------------------: | :----------------------------------------------: | :----------------------------------------------: |
+| <img src="./zimage/flutter_07.png" width="150"/> | <img src="./zimage/flutter_08.png" width="150"/> | <img src="./zimage/flutter_09.png" width="150"/> |
+
+|                     Settings                     |                      Search                      |                      Theme                       |
+| :----------------------------------------------: | :----------------------------------------------: | :----------------------------------------------: |
+| <img src="./zimage/flutter_10.png" width="150"/> | <img src="./zimage/flutter_11.png" width="150"/> | <img src="./zimage/flutter_12.png" width="150"/> |
+
+|                     Grid view                     |
+| :-----------------------------------------------: |
+| <img src="./zimage/flutter_022.png" width="150"/> |
 
 ## 🚀 Getting Started
 

@@ -3,7 +3,7 @@ import 'package:mood_journal/components/onboarding/onboarding_layout.dart';
 import 'package:mood_journal/theme/app_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../screens/home/home_screen.dart';
-import '../bottom_nav_layout.dart';
+// import '../bottom_nav_layout.dart';
 
 // class CardScreen extends StatelessWidget{
 //   const CardScreen

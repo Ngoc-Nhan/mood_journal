@@ -7,6 +7,11 @@ class SettingsProvider extends ChangeNotifier {
   String _sortOrder = 'date_modified';
   // final SettingsService _settingsService = SettingsService();
   String? _userName;
+  // bool _isNotificationOn = false;
+  // String _reminderTime = "20:00";
+
+  // bool get isNotificationOn => _isNotificationOn;
+  // String get reminderTime => _reminderTime;
   String? get userName => _userName;
 
   bool get isGridView => _isGridView;
@@ -22,6 +27,36 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   // load khi app start
+  // Cập nhật hàm _loadSettings hiện tại của bạn
+  // Future<void> _loadSettings() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   _isGridView = prefs.getBool('grid_view') ?? false;
+  //   _sortOrder = prefs.getString('sort_order') ?? 'date_modified';
+  //   _userName = prefs.getString('user_name');
+  //   _streak = prefs.getInt('user_streak') ?? 0;
+
+  //   // 👉 Thêm 2 dòng này để load trạng thái thông báo
+  //   _isNotificationOn = prefs.getBool('is_notification_on') ?? false;
+  //   _reminderTime = prefs.getString('reminder_time') ?? "20:00";
+
+  //   notifyListeners();
+  // }
+
+  // // Hàm bật/tắt Switch
+  // Future<void> toggleNotification(bool value) async {
+  //   _isNotificationOn = value;
+  //   final prefs = await SharedPreferences.getInstance();
+  //   await prefs.setBool('is_notification_on', value);
+  //   notifyListeners();
+  // }
+
+  // // Hàm lưu giờ đã chọn
+  // Future<void> setReminderTime(String time) async {
+  //   _reminderTime = time;
+  //   final prefs = await SharedPreferences.getInstance();
+  //   await prefs.setString('reminder_time', time);
+  //   notifyListeners();
+  // }
 
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();

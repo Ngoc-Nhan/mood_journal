@@ -3,7 +3,7 @@ import 'package:mood_journal/components/onboarding/pin_page.dart';
 import 'package:mood_journal/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'onboarding_layout.dart';
-import './pin_page.dart';
+// import './pin_page.dart';
 
 class ChoiceTheme extends StatefulWidget {
   const ChoiceTheme({super.key});

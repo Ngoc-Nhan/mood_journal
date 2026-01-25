@@ -4,8 +4,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mood_journal/models/note_model.dart';
 import 'package:mood_journal/providers/note_provider.dart';
-import 'package:mood_journal/providers/theme_provider.dart';
+// import 'package:mood_journal/providers/theme_provider.dart';
 import 'package:mood_journal/screens/home/theme_screen.dart';
+// import 'package:mood_journal/services/notifications_service.dart';
 import 'package:mood_journal/services/settings_service.dart';
 import 'package:mood_journal/theme/app_colors.dart';
 import 'package:provider/provider.dart';
@@ -118,6 +119,43 @@ class _AccountScreenState extends State<AccountScreen> {
                           );
                         },
                       ),
+                      // ListTile(
+                      //   leading: const Icon(Icons.notifications_outlined),
+                      //   title: const Text('Set time to reminder'),
+                      //   onTap: () async {
+                      //     DateTime now = DateTime.now();
+                      //     // Tạo mốc 20:00 tối hôm nay
+                      //     DateTime scheduledTime = DateTime(
+                      //       now.year,
+                      //       now.month,
+                      //       now.day,
+                      //       20,
+                      //       0,
+                      //     );
+
+                      //     // Nếu đã qua 20h thì lịch sẽ là ngày mai
+                      //     if (scheduledTime.isBefore(now)) {
+                      //       scheduledTime = scheduledTime.add(
+                      //         const Duration(days: 1),
+                      //       );
+                      //     }
+
+                      //     await NotificationService().scheduleNotification(
+                      //       id: 1,
+                      //       title: "Đã đến giờ viết nhật ký!",
+                      //       body: "Hãy dành 5 phút tâm sự với Liptwo nhé 🐻🦖",
+                      //       scheduledDate: scheduledTime,
+                      //     );
+
+                      //     ScaffoldMessenger.of(context).showSnackBar(
+                      //       const SnackBar(
+                      //         content: Text(
+                      //           "Đã đặt lịch nhắc nhở 20:00 mỗi ngày",
+                      //         ),
+                      //       ),
+                      //     );
+                      //   },
+                      // ),
                       // // Dark/Light Theme Mode
                       // Consumer<ThemeProvider>(
                       //   buxilder: (context, themeProvider, _) {
@@ -253,30 +291,30 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  void _showThemeModeDialog(BuildContext context, ThemeProvider themeProvider) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Select Theme Mode'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: ThemeMode.values.map((mode) {
-              return RadioListTile<ThemeMode>(
-                title: Text(_getThemeModeText(mode)),
-                value: mode,
-                groupValue: themeProvider.themeMode,
-                onChanged: (value) {
-                  themeProvider.setThemeMode(value!);
-                  Navigator.pop(context);
-                },
-              );
-            }).toList(),
-          ),
-        );
-      },
-    );
-  }
+  // void _showThemeModeDialog(BuildContext context, ThemeProvider themeProvider) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) {
+  //       return AlertDialog(
+  //         title: const Text('Select Theme Mode'),
+  //         content: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: ThemeMode.values.map((mode) {
+  //             return RadioListTile<ThemeMode>(
+  //               title: Text(_getThemeModeText(mode)),
+  //               value: mode,
+  //               groupValue: themeProvider.themeMode,
+  //               onChanged: (value) {
+  //                 themeProvider.setThemeMode(value!);
+  //                 Navigator.pop(context);
+  //               },
+  //             );
+  //           }).toList(),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
   Future<void> _exportNotes(BuildContext context) async {
     final noteProvider = Provider.of<NoteProvider>(context, listen: false);
@@ -437,7 +475,7 @@ class _AccountScreenState extends State<AccountScreen> {
       final noteProvider = Provider.of<NoteProvider>(context, listen: false);
       int importedCount = 0;
 
-      if (data['notes' != null]) {
+      if (data['notes'] != null) {
         for (final noteData in data['notes']) {
           final note = NoteModel.fromJson(noteData);
           await noteProvider.createNote(note);
