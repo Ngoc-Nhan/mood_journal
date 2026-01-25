@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
-class GeminiService {
-  final String apiKey = "YOUR_GEMINI_API_KEY";
+class GeminiService extends ChangeNotifier {
+  final String apiKey = "AIzaSyBKMrlvPvyueZ2dtPBw2QV2P-vc3YpGKt8";
 
-  late bool _isLoading; // Lấy tại Google AI Studio
-  late String? _lastAIResponse; // Lấy tại Google AI Studio
+  bool _isLoading = false; // Lấy tại Google AI Studio
+  String? _lastAIResponse; // Lấy tại Google AI Studio
 
   Future<void> generateAIAdvice(String content) async {
     _isLoading = true;
@@ -14,8 +14,7 @@ class GeminiService {
       // 1. Khởi tạo Model (Sử dụng gemini-1.5-flash để phản hồi nhanh)
       final model = GenerativeModel(
         model: 'gemini-2.5-flash',
-        apiKey:
-            'AIzaSyBKMrlvPvyueZ2dtPBw2QV2P-vc3YpGKt8', // Thay bằng API Key thật của bạn
+        apiKey: apiKey, // Thay bằng API Key thật của bạn
       );
 
       // 2. Thiết lập nội dung Prompt kết hợp với nhật ký của user

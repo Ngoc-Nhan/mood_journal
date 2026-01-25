@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -75,6 +76,11 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     super.dispose();
   }
 
+  Future<bool> hasInternet() async {
+    final result = await Connectivity().checkConnectivity();
+    return result != ConnectivityResult.none;
+  }
+
   Future<void> _saveNote() async {
     // 1. Kiểm tra nếu cả tiêu đề và nội dung đều trống thì không lưu
     if (_titleController.text.trim().isEmpty &&
@@ -109,14 +115,13 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
           context: context,
           barrierDismissible: false,
           builder: (context) => Center(
-            child: Column(
-              children: [
-                CircularProgressIndicator(),
-                // Text(
-                //   'Đang lưu và chờ phản hồi từ AI...',
-                //   style: TextStyle(fontSize: 16),
-                // ),
-              ],
+            child: Center(
+              child: CircularProgressIndicator(),
+
+              // Text(
+              //   'Đang lưu và chờ phản hồi từ AI...',
+              //   style: TextStyle(fontSize: 16),
+              // ),
             ),
           ),
         );
@@ -831,6 +836,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   //   );
   // }
   Future<void> _showAIResultPopup(BuildContext context, String response) async {
+    final online = await hasInternet();
     await showDialog(
       context: context,
       barrierDismissible: true,
@@ -880,37 +886,38 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // AI MESSAGE
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Column(
-                              children: [
-                                const Text(
-                                  "Liptwo",
-                                  style: TextStyle(
-                                    color: Colors.redAccent,
-                                    fontWeight: FontWeight.bold,
+                        if (online)
+                          // AI MESSAGE
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Column(
+                                children: [
+                                  const Text(
+                                    "Liptwo",
+                                    style: TextStyle(
+                                      color: Colors.redAccent,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Image.asset(
+                                    'assets/images/shinba.png',
+                                    width: 50,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  response,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    height: 1.4,
                                   ),
                                 ),
-                                Image.asset(
-                                  'assets/images/shinba.png',
-                                  width: 50,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                response,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  height: 1.4,
-                                ),
                               ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
 
                         const SizedBox(height: 20),
 

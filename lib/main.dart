@@ -17,6 +17,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:mood_journal/services/ai_respone.dart';
 
 void main() async {
   // Đảm bảo Flutter đã được khởi tạo
@@ -37,7 +38,7 @@ void main() async {
   final bool hasPin = await settingsService.hasPin();
   await dotenv.load(fileName: ".env");
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
+  // await dotenv.load(fileName: ".env");
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle(statusBarColor: Colors.transparent),
   );
@@ -72,6 +73,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => GeminiService()),
+
         // ChangeNotifireProvider(
         //   create : (_)=> SettingsProvider()..loadUserName(),
         // )

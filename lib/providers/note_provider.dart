@@ -32,7 +32,6 @@ class NoteProvider extends ChangeNotifier {
         model: 'gemini-2.5-flash',
         apiKey: '${dotenv.env['GEMINI_API_KEY']}',
       );
-      
 
       // 2. Thiết lập nội dung Prompt kết hợp với nhật ký của user
       final prompt =
