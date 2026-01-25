@@ -4,14 +4,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mood_journal/models/note_model.dart';
 import 'package:mood_journal/providers/note_provider.dart';
-import 'package:mood_journal/providers/theme_provider.dart';
+// import 'package:mood_journal/providers/theme_provider.dart';
 import 'package:mood_journal/screens/home/theme_screen.dart';
+// import 'package:mood_journal/services/notifications_service.dart';
 import 'package:mood_journal/services/settings_service.dart';
 import 'package:mood_journal/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:mood_journal/providers/settings_provider.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 import 'package:file_picker/file_picker.dart';
 
 class AccountScreen extends StatefulWidget {
@@ -38,6 +39,15 @@ class _AccountScreenState extends State<AccountScreen> {
   //     _userNameFuture = _settingsService.getUserName();
   //   });
   // }
+
+  Future<void> _launchURL(String urlString) async {
+    final Uri url = Uri.parse(urlString);
+
+    // Kiểm tra xem thiết bị có ứng dụng nào hỗ trợ mở link không
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      throw Exception('Could not launch $url');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -109,21 +119,58 @@ class _AccountScreenState extends State<AccountScreen> {
                           );
                         },
                       ),
-                      // Dark/Light Theme Mode
-                      Consumer<ThemeProvider>(
-                        builder: (context, themeProvider, _) {
-                          return ListTile(
-                            leading: const Icon(Icons.brightness_6_outlined),
-                            title: const Text('Theme'),
-                            subtitle: Text(
-                              _getThemeModeText(themeProvider.themeMode),
-                            ),
-                            onTap: () {
-                              _showThemeModeDialog(context, themeProvider);
-                            },
-                          );
-                        },
-                      ),
+                      // ListTile(
+                      //   leading: const Icon(Icons.notifications_outlined),
+                      //   title: const Text('Set time to reminder'),
+                      //   onTap: () async {
+                      //     DateTime now = DateTime.now();
+                      //     // Tạo mốc 20:00 tối hôm nay
+                      //     DateTime scheduledTime = DateTime(
+                      //       now.year,
+                      //       now.month,
+                      //       now.day,
+                      //       20,
+                      //       0,
+                      //     );
+
+                      //     // Nếu đã qua 20h thì lịch sẽ là ngày mai
+                      //     if (scheduledTime.isBefore(now)) {
+                      //       scheduledTime = scheduledTime.add(
+                      //         const Duration(days: 1),
+                      //       );
+                      //     }
+
+                      //     await NotificationService().scheduleNotification(
+                      //       id: 1,
+                      //       title: "Đã đến giờ viết nhật ký!",
+                      //       body: "Hãy dành 5 phút tâm sự với Liptwo nhé 🐻🦖",
+                      //       scheduledDate: scheduledTime,
+                      //     );
+
+                      //     ScaffoldMessenger.of(context).showSnackBar(
+                      //       const SnackBar(
+                      //         content: Text(
+                      //           "Đã đặt lịch nhắc nhở 20:00 mỗi ngày",
+                      //         ),
+                      //       ),
+                      //     );
+                      //   },
+                      // ),
+                      // // Dark/Light Theme Mode
+                      // Consumer<ThemeProvider>(
+                      //   buxilder: (context, themeProvider, _) {
+                      //     return ListTile(
+                      //       leading: const Icon(Icons.brightness_6_outlined),
+                      //       title: const Text('Theme'),
+                      //       subtitle: Text(
+                      //         _getThemeModeText(themeProvider.themeMode),
+                      //       ),
+                      //       onTap: () {
+                      //         _showThemeModeDialog(context, themeProvider);
+                      //       },
+                      //     );
+                      //   },
+                      // ),
                       const Divider(),
                       _SectionHeader(title: 'Data Management'),
                       ListTile(
@@ -145,9 +192,12 @@ class _AccountScreenState extends State<AccountScreen> {
                         title: Text('Version'),
                         subtitle: Text('1.0.0'),
                       ),
-                      const ListTile(
-                        leading: Icon(Icons.help_outline),
-                        title: Text('Help'),
+                      ListTile(
+                        leading: const Icon(Icons.help_outline),
+                        title: const Text('Help'),
+                        onTap: () => _launchURL(
+                          'https://team-the-inner-sanctuary.vercel.app/',
+                        ),
                       ),
                     ],
                   ),
@@ -241,30 +291,30 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  void _showThemeModeDialog(BuildContext context, ThemeProvider themeProvider) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Select Theme Mode'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: ThemeMode.values.map((mode) {
-              return RadioListTile<ThemeMode>(
-                title: Text(_getThemeModeText(mode)),
-                value: mode,
-                groupValue: themeProvider.themeMode,
-                onChanged: (value) {
-                  themeProvider.setThemeMode(value!);
-                  Navigator.pop(context);
-                },
-              );
-            }).toList(),
-          ),
-        );
-      },
-    );
-  }
+  // void _showThemeModeDialog(BuildContext context, ThemeProvider themeProvider) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) {
+  //       return AlertDialog(
+  //         title: const Text('Select Theme Mode'),
+  //         content: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: ThemeMode.values.map((mode) {
+  //             return RadioListTile<ThemeMode>(
+  //               title: Text(_getThemeModeText(mode)),
+  //               value: mode,
+  //               groupValue: themeProvider.themeMode,
+  //               onChanged: (value) {
+  //                 themeProvider.setThemeMode(value!);
+  //                 Navigator.pop(context);
+  //               },
+  //             );
+  //           }).toList(),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
   Future<void> _exportNotes(BuildContext context) async {
     final noteProvider = Provider.of<NoteProvider>(context, listen: false);
@@ -330,9 +380,13 @@ class _AccountScreenState extends State<AccountScreen> {
       if (context.mounted) {
         Navigator.pop(context);
       }
-      await Share.shareXFiles([XFile(file.path)], subject: 'Notes Export');
+      final result = await Share.shareXFiles(
+        [XFile(file.path)],
+        subject: 'My Mood Journal Export',
+        text: 'Here is the backup of my notes.',
+      );
 
-      if (context.mounted) {
+      if (result.status == ShareResultStatus.success && context.mounted) {
         showDialog(
           context: context,
           builder: (context) {
@@ -421,7 +475,7 @@ class _AccountScreenState extends State<AccountScreen> {
       final noteProvider = Provider.of<NoteProvider>(context, listen: false);
       int importedCount = 0;
 
-      if (data['notes' != null]) {
+      if (data['notes'] != null) {
         for (final noteData in data['notes']) {
           final note = NoteModel.fromJson(noteData);
           await noteProvider.createNote(note);

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -7,12 +8,25 @@ import 'package:mood_journal/components/color_picker.dart';
 import 'package:mood_journal/constants/mood_default.dart';
 import 'package:mood_journal/models/note_model.dart';
 import 'package:mood_journal/providers/note_provider.dart';
+import 'package:mood_journal/providers/settings_provider.dart';
 import 'package:mood_journal/screens/note_edit/template_question/tempalte_question.dart';
 import 'package:mood_journal/theme/app_colors.dart';
 import 'package:popover/popover.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:image_picker/image_picker.dart';
+
+// YouTube
+import 'package:mood_journal/services/youtube_music.dart';
+import 'package:mood_journal/utils/youtube_launcher.dart';
+
+const Map<int, String> _moodMap = {
+  4: 'Vui vẻ',
+  3: 'Hào hứng',
+  2: 'Buồn',
+  1: 'Tức giận',
+  0: 'Lo lắng',
+};
 
 class NoteEditorScreen extends StatefulWidget {
   final NoteModel? note;
@@ -42,6 +56,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   DateTime? _aiResponseCreatedAt;
   final _tagController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  late Future<List<YouTubeMusic>> _musicFuture;
   @override
   void initState() {
     super.initState();
@@ -59,6 +74,9 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     _attachments = List.from(widget.note?.attachments ?? []);
     _aiResponse = widget.note?.aiResponse;
     _aiResponseCreatedAt = widget.note?.aiResponseCreatedAt;
+    _musicFuture = YouTubeService.searchMusic(
+      "nhạc chill chữa lành cho tâm trạng ${_moodMap[_selectedMood]}",
+    );
   }
 
   @override
@@ -67,6 +85,28 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     _contentController.dispose();
     _tagController.dispose();
     super.dispose();
+  }
+
+  Future<bool> hasInternet() async {
+    try {
+      // Lớp 1: Kiểm tra phần cứng có bật kết nối không
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.none) {
+        return false;
+      }
+
+      // Lớp 2: Kiểm tra thực tế bằng cách "ping" một địa chỉ tin cậy
+      // lookup trả về danh sách địa chỉ IP, nếu rỗng nghĩa là không có internet thực sự
+      final result = await InternetAddress.lookup('google.com').timeout(
+        const Duration(seconds: 3),
+      ); // Thêm timeout để tránh chờ quá lâu
+
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } on SocketException catch (_) {
+      return false; // Lỗi này xảy ra khi không thể kết nối tới host
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> _saveNote() async {
@@ -99,35 +139,41 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
 
     try {
       if (widget.note == null && _aiResponse == null) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => Center(
-            child: Column(
-              children: [
-                CircularProgressIndicator(),
-                // Text(
-                //   'Đang lưu và chờ phản hồi từ AI...',
-                //   style: TextStyle(fontSize: 16),
-                // ),
-              ],
+        // --- BƯỚC KIỂM TRA MẠNG Ở ĐÂY ---
+        bool isOnline = await hasInternet();
+        if (isOnline) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => Center(
+              child: CircularProgressIndicator(),
+
+              // Text(
+              //   'Đang lưu và chờ phản hồi từ AI...',
+              //   style: TextStyle(fontSize: 16),
+              // ),
             ),
-          ),
-        );
+          );
+          _musicFuture = YouTubeService.searchMusic(
+            "nhạc chill chữa lành cho tâm trạng ${_moodMap[_selectedMood]}",
+          );
+          // 1. Gọi SDK để lấy phản hồi AI
+          await noteProvider.generateAIAdvice(_contentController.text.trim());
+          if (mounted) {
+            Navigator.pop(context); // Tắt Loading
 
-        // 1. Gọi SDK để lấy phản hồi AI
-        await noteProvider.generateAIAdvice(_contentController.text.trim());
-
-        if (mounted) {
-          Navigator.pop(context); // Tắt Loading
-
-          // 2. Lấy dữ liệu từ Provider sau khi gọi xong
-          _aiResponse = noteProvider.lastAIResponse;
-          if (_aiResponse != null) {
-            _aiResponseCreatedAt =
-                DateTime.now(); // Ghi nhận thời gian tạo AI response
-            await _showAIResultPopup(context, _aiResponse!);
+            // 2. Lấy dữ liệu từ Provider sau khi gọi xong
+            _aiResponse = noteProvider.lastAIResponse;
+            if (_aiResponse != null) {
+              _aiResponseCreatedAt =
+                  DateTime.now(); // Ghi nhận thời gian tạo AI response
+              await _showAIResultPopup(context, _aiResponse!);
+            }
           }
+        } else {
+          // THÔNG BÁO: Nếu không có mạng, thông báo nhẹ cho người dùng
+          // nhưng vẫn cho phép code chạy tiếp để lưu Note vào máy
+          debugPrint("Offline mode: Skipping AI generation.");
         }
       }
       final note = NoteModel(
@@ -141,8 +187,8 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         tags: _tags,
         isPinned: widget.note?.isPinned ?? false,
         attachments: _attachments,
-        createdAt: _selectedDate,
-        modifiedAt: _selectedDate,
+        createdAt: widget.note?.createdAt ?? DateTime.now(),
+        modifiedAt: DateTime.now(),
         // Gán giá trị AI vào đây để lưu xuống DB
         aiResponse: _aiResponse ?? widget.note?.aiResponse,
         aiResponseCreatedAt:
@@ -187,12 +233,22 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         ),
         actions: [
           IconButton(
-            onPressed: () {
-              _showAIResultPopup(
-                context,
-                widget.note?.aiResponse ??
-                    'Mình luôn lắm nghe, hãy viết thêm nhiều nhé',
-              );
+            onPressed: () async {
+              final hasNet = await hasInternet();
+              final aiResponse = widget.note?.aiResponse ?? '';
+
+              if (!hasNet && aiResponse.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      "Cần kết nối mạng để xem phản hồi AI và nhạc",
+                    ),
+                  ),
+                );
+                return;
+              }
+
+              await _showAIResultPopup(context, aiResponse);
             },
             icon: Icon(Icons.message),
           ),
@@ -740,81 +796,265 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   }
 
   // void _showIconResponeDialog(BuildContext context) {
+  // Future<void> _showAIResultPopup(BuildContext context, String response) async {
+  //   await showDialog(
+  //     context: context,
+  //     builder: (context) => Dialog(
+  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+  //       child: Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           Stack(
+  //             children: [
+  //               // Ảnh minh họa phía trên (Sliver-like)
+  //               ClipRRect(
+  //                 borderRadius: const BorderRadius.vertical(
+  //                   top: Radius.circular(20),
+  //                 ),
+  //                 child: Image.asset(
+  //                   'assets/images/bear.png', // Thay bằng ảnh của bạn
+  //                   height: 150,
+  //                   width: double.infinity,
+  //                   fit: BoxFit.cover,
+  //                 ),
+  //               ),
+  //               Positioned(
+  //                 right: 8,
+  //                 top: 8,
+  //                 child: GestureDetector(
+  //                   onTap: () {
+  //                     Navigator.pop(context);
+  //                   },
+  //                   child: const CircleAvatar(
+  //                     backgroundColor: Colors.black26,
+  //                     child: Icon(Icons.close, color: Colors.white),
+  //                   ),
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //           Padding(
+  //             padding: const EdgeInsets.all(20),
+  //             child: Row(
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               children: [
+  //                 // Avatar nhân vật AI
+  //                 Column(
+  //                   children: [
+  //                     const Text(
+  //                       "Liptwo",
+  //                       style: TextStyle(
+  //                         color: Colors.redAccent,
+  //                         fontWeight: FontWeight.bold,
+  //                       ),
+  //                     ),
+  //                     Image.asset('assets/images/shinba.png', width: 50),
+  //                   ],
+  //                 ),
+  //                 const SizedBox(width: 12),
+  //                 // Nội dung phản hồi
+  //                 Expanded(
+  //                   child: Column(
+  //                     crossAxisAlignment: CrossAxisAlignment.start,
+  //                     children: [
+  //                       const SizedBox(height: 4),
+  //                       Text(
+  //                         response,
+  //                         style: const TextStyle(fontSize: 14, height: 1.4),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+
+  //   Row(
+  //     mainAxisAlignment: MainAxisAlignment.end,
+  //     children: [
+  //       Text('Hãy thưởng thức bản nhạc phù hợp với tâm trạng của bạn!'),
+  //     ],
+  //   );
+  // }
   Future<void> _showAIResultPopup(BuildContext context, String response) async {
+    if (!mounted) return;
+
     await showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Stack(
+      barrierDismissible: true,
+      builder: (context) {
+        final height = MediaQuery.of(context).size.height;
+
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: SizedBox(
+            height: height * 0.8, // 🔒 giới hạn chiều cao
+            child: Column(
               children: [
-                // Ảnh minh họa phía trên (Sliver-like)
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(20),
-                  ),
-                  child: Image.asset(
-                    'assets/images/bear.png', // Thay bằng ảnh của bạn
-                    height: 150,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
+                // ===== HEADER =====
+                Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(20),
+                      ),
+                      child: Image.asset(
+                        'assets/images/bear.png',
+                        height: 150,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: const CircleAvatar(
+                          backgroundColor: Colors.black26,
+                          child: Icon(Icons.close, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                    child: const CircleAvatar(
-                      backgroundColor: Colors.black26,
-                      child: Icon(Icons.close, color: Colors.white),
+
+                // ===== BODY (SCROLL) =====
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // AI MESSAGE
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Column(
+                              children: [
+                                const Text(
+                                  "Liptwo",
+                                  style: TextStyle(
+                                    color: Colors.redAccent,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Image.asset(
+                                  'assets/images/shinba.png',
+                                  width: 50,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                response,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // 🎧 MUSIC TITLE
+                        const Text(
+                          '🎧 Nhạc gợi ý cho tâm trạng của bạn',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // 🎶 MUSIC LIST
+                        FutureBuilder<List<YouTubeMusic>>(
+                          future: _musicFuture,
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Padding(
+                                padding: EdgeInsets.all(12),
+                                child: CircularProgressIndicator(),
+                              );
+                            }
+
+                            if (snapshot.hasError) {
+                              return Text("Lỗi tải nhạc: ${snapshot.error}");
+                            }
+
+                            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                              return const Text(
+                                "Không tìm thấy nhạc phù hợp 🌱",
+                              );
+                            }
+
+                            final musics = snapshot.data!;
+
+                            return ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: musics.length,
+                              itemBuilder: (context, index) {
+                                final music = musics[index];
+
+                                return InkWell(
+                                  onTap: () => openYoutubeVideo(music.videoId),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 6,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          child: Image.network(
+                                            music.thumbnail,
+                                            width: 64,
+                                            height: 40,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            music.title,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ),
+                                        const Icon(
+                                          Icons.play_circle_fill,
+                                          color: Colors.redAccent,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Avatar nhân vật AI
-                  Column(
-                    children: [
-                      const Text(
-                        "Liptwo",
-                        style: TextStyle(
-                          color: Colors.redAccent,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Image.asset('assets/images/shinba.png', width: 50),
-                    ],
-                  ),
-                  const SizedBox(width: 12),
-                  // Nội dung phản hồi
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        Text(
-                          response,
-                          style: const TextStyle(fontSize: 14, height: 1.4),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

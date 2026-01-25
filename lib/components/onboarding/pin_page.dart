@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mood_journal/components/onboarding/onboarding_layout.dart';
 import 'package:mood_journal/services/settings_service.dart';
-import 'onboarding_layout.dart';
+// import 'onboarding_layout.dart';
 import './welcome_page.dart';
 
 class PinPage extends StatefulWidget {
@@ -12,26 +12,20 @@ class PinPage extends StatefulWidget {
 }
 
 class _PinPageState extends State<PinPage> {
-  final TextEditingController _pinController = TextEditingController();
+  // final TextEditingController _pinController = TextEditingController();
   final _settingsService = SettingsService();
   List<int> pin = [];
   static const int pinLength = 4;
 
   void _saveSettings() async {
-    if (_pinController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập đầy đủ tên và mã PIN.')),
-      );
-      return;
-    }
+    // if (pin.length < pinLength) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(content: Text('Vui lòng nhập đầy đủ tên và mã PIN.')),
+    //   );
+    //   return;
+    // }
 
-    if (_pinController.text.length < 4) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Mã PIN phải có ít nhất 4 ký tự.')),
-      );
-      return;
-    }
-    await _settingsService.savePin(_pinController.text);
+    await _settingsService.savePin(pin.join());
   }
 
   Widget _buildPinDots() {
@@ -60,8 +54,16 @@ class _PinPageState extends State<PinPage> {
           setState(() => pin.add(number));
         }
       },
-      child: Center(
-        child: Text(number.toString(), style: const TextStyle(fontSize: 22)),
+      child: Container(
+        decoration: BoxDecoration(
+          // color: Colors.white,
+          border: Border.all(color: Colors.pink),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Center(
+          child: Text(number.toString(), style: const TextStyle(fontSize: 22)),
+        ),
       ),
     );
   }
@@ -98,6 +100,8 @@ class _PinPageState extends State<PinPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return OnboardingLayout(
       title: 'Password (PIN)',
       subtitle: 'Let enter password to protect your note',
@@ -114,16 +118,13 @@ class _PinPageState extends State<PinPage> {
       primaryText: 'Next',
       onPrimary: pin.length == pinLength
           ? () {
+              _saveSettings();
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => WelcomePage()),
               );
             }
           : null,
-      // if (pin.length == 4) {
-      //   //todo : lưu pin
-      //   print('PIN =$pin');
-      // }
       secondaryButton: Padding(
         padding: const EdgeInsets.only(right: 16),
         child: SizedBox(
@@ -135,7 +136,10 @@ class _PinPageState extends State<PinPage> {
                 MaterialPageRoute(builder: (_) => WelcomePage()),
               );
             },
-            child: Text('Skip', style: TextStyle(color: Colors.black)),
+            child: Text(
+              'Skip',
+              style: TextStyle(color: isDark ? Colors.white : Colors.black),
+            ),
           ),
         ),
       ),

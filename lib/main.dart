@@ -4,19 +4,21 @@ import 'package:mood_journal/components/onboarding/start_screen.dart';
 // import 'package:mood_journal/components/onboarding/start_screen.dart';
 import 'package:mood_journal/db/database_helper.dart';
 import 'package:mood_journal/pages/pin_login_page.dart';
-import 'package:mood_journal/pages/setup_page.dart';
+// import 'package:mood_journal/pages/setup_page.dart';
 import 'package:mood_journal/providers/note_provider.dart';
 import 'package:mood_journal/providers/settings_provider.dart';
 import 'package:mood_journal/providers/theme_provider.dart';
 import 'package:mood_journal/repository/note_repository.dart';
 import 'package:mood_journal/screens/home/home_screen.dart';
+// import 'package:mood_journal/services/notifications_service.dart';
 // import 'package:mood_journal/screens/home/home_screen.dart';
 import 'package:mood_journal/services/settings_service.dart';
 import 'package:mood_journal/theme/app_theme.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:mood_journal/services/ai_respone.dart';
 
 void main() async {
   // Đảm bảo Flutter đã được khởi tạo
@@ -36,9 +38,13 @@ void main() async {
   // Kiểm tra xem PIN có tồn tại không
   final bool hasPin = await settingsService.hasPin();
   await dotenv.load(fileName: ".env");
+  WidgetsFlutterBinding.ensureInitialized();
+  // await dotenv.load(fileName: ".env");
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle(statusBarColor: Colors.transparent),
   );
+  // khởi tạo notification thông báo hằng ngày
+  // await NotificationService().init();
 
   final themeProvider = ThemeProvider();
   await themeProvider.loadBackground();
@@ -70,6 +76,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => GeminiService()),
+
         // ChangeNotifireProvider(
         //   create : (_)=> SettingsProvider()..loadUserName(),
         // )
@@ -82,7 +90,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => SettingsProvider()
             ..loadUserName()
-            ..updateStreakOnAppOpen(),
+            ..updateStreakOnAppActive(),
         ),
 
         ChangeNotifierProvider.value(value: themeProvider),

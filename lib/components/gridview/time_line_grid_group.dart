@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:intl/intl.dart';
 import 'package:mood_journal/components/gridview/note_card.dart';
-import 'package:mood_journal/components/listview/build_note_detail.dart';
+// import 'package:mood_journal/components/listview/build_note_detail.dart';
 import 'package:mood_journal/models/note_model.dart';
 
 class TimelineGridGroup extends StatelessWidget {

@@ -5,7 +5,7 @@ import 'package:mood_journal/components/listview/build_note_detail.dart';
 import 'package:mood_journal/models/note_model.dart';
 import 'package:mood_journal/providers/note_provider.dart';
 import 'package:mood_journal/theme/app_colors.dart';
-import 'package:mood_journal/widgets/note_card.dart';
+// import 'package:mood_journal/widgets/note_card.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -249,6 +249,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     );
                   }
                   return ListView.builder(
+                    padding: EdgeInsets.all(8),
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: value.length,
