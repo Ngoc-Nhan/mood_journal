@@ -15,13 +15,13 @@ A personal mood tracking application built with Flutter. Keep track of your dail
 
 ## 📸 Screenshots
 
-|                     Welcome                      |                    Add Entry                     |                       Pin                        |
-| :----------------------------------------------: | :----------------------------------------------: | :----------------------------------------------: |
-| <img src="./zimage/flutter_01.png" width="150"/> | <img src="./zimage/flutter_02.png" width="150"/> | <img src="./zimage/flutter_03.png" width="150"/> |
+|                     Welcome                      |                    Add Entry                     |                       Pin                        |                   Edit Note                     |                   AI Response                    |
+| :----------------------------------------------: | :----------------------------------------------: | :----------------------------------------------: | :----------------------------------------------: | :----------------------------------------------: |
+| <img src="./zimage/flutter_01.png" width="150"/> | <img src="./zimage/flutter_02.png" width="150"/> | <img src="./zimage/flutter_03.png" width="150"/> |<img src="./zimage/flutter_04.png" width="150"/> | <img src="./zimage/flutter_05.png" width="150"/> |
 
-|                    Edit Note                     |                   AI Response                    |                     Template                     |
-| :----------------------------------------------: | :----------------------------------------------: | :----------------------------------------------: |
-| <img src="./zimage/flutter_04.png" width="150"/> | <img src="./zimage/flutter_05.png" width="150"/> | <img src="./zimage/flutter_06.png" width="150"/> |
+|                  Template                        |
+| :----------------------------------------------: |
+| <img src="./zimage/flutter_06.png" width="150"/> |
 
 |                  Info Template                   |                     Calendar                     |                     Insight                      |
 | :----------------------------------------------: | :----------------------------------------------: | :----------------------------------------------: |
