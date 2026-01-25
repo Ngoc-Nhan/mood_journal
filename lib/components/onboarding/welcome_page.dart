@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mood_journal/components/onboarding/onboarding_layout.dart';
+import 'package:mood_journal/theme/app_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../screens/home/home_screen.dart';
 import '../bottom_nav_layout.dart';
@@ -31,7 +32,7 @@ class _WelcomePageState extends State<WelcomePage> {
       primaryText: 'Okay !',
       onPrimary: () {
         _showOnboarding();
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => HomeScreen()),
         );
@@ -79,11 +80,12 @@ class CardItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.pinkAccent),
         borderRadius: BorderRadius.circular(15),
-        color: Colors.white,
+        color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       ),
       clipBehavior: Clip.antiAlias,
 

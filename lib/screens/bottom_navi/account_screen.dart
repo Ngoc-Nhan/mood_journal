@@ -11,7 +11,7 @@ import 'package:mood_journal/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:mood_journal/providers/settings_provider.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 import 'package:file_picker/file_picker.dart';
 
 class AccountScreen extends StatefulWidget {
@@ -38,6 +38,15 @@ class _AccountScreenState extends State<AccountScreen> {
   //     _userNameFuture = _settingsService.getUserName();
   //   });
   // }
+
+  Future<void> _launchURL(String urlString) async {
+    final Uri url = Uri.parse(urlString);
+
+    // Kiểm tra xem thiết bị có ứng dụng nào hỗ trợ mở link không
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      throw Exception('Could not launch $url');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -109,21 +118,21 @@ class _AccountScreenState extends State<AccountScreen> {
                           );
                         },
                       ),
-                      // Dark/Light Theme Mode
-                      Consumer<ThemeProvider>(
-                        builder: (context, themeProvider, _) {
-                          return ListTile(
-                            leading: const Icon(Icons.brightness_6_outlined),
-                            title: const Text('Theme'),
-                            subtitle: Text(
-                              _getThemeModeText(themeProvider.themeMode),
-                            ),
-                            onTap: () {
-                              _showThemeModeDialog(context, themeProvider);
-                            },
-                          );
-                        },
-                      ),
+                      // // Dark/Light Theme Mode
+                      // Consumer<ThemeProvider>(
+                      //   buxilder: (context, themeProvider, _) {
+                      //     return ListTile(
+                      //       leading: const Icon(Icons.brightness_6_outlined),
+                      //       title: const Text('Theme'),
+                      //       subtitle: Text(
+                      //         _getThemeModeText(themeProvider.themeMode),
+                      //       ),
+                      //       onTap: () {
+                      //         _showThemeModeDialog(context, themeProvider);
+                      //       },
+                      //     );
+                      //   },
+                      // ),
                       const Divider(),
                       _SectionHeader(title: 'Data Management'),
                       ListTile(
@@ -145,9 +154,12 @@ class _AccountScreenState extends State<AccountScreen> {
                         title: Text('Version'),
                         subtitle: Text('1.0.0'),
                       ),
-                      const ListTile(
-                        leading: Icon(Icons.help_outline),
-                        title: Text('Help'),
+                      ListTile(
+                        leading: const Icon(Icons.help_outline),
+                        title: const Text('Help'),
+                        onTap: () => _launchURL(
+                          'https://team-the-inner-sanctuary.vercel.app/',
+                        ),
                       ),
                     ],
                   ),
@@ -172,7 +184,6 @@ class _AccountScreenState extends State<AccountScreen> {
           content: TextField(
             controller: nameController,
             decoration: const InputDecoration(hintText: "Enter new name"),
-            
           ),
           actions: [
             TextButton(
@@ -331,9 +342,13 @@ class _AccountScreenState extends State<AccountScreen> {
       if (context.mounted) {
         Navigator.pop(context);
       }
-      await Share.shareXFiles([XFile(file.path)], subject: 'Notes Export');
+      final result = await Share.shareXFiles(
+        [XFile(file.path)],
+        subject: 'My Mood Journal Export',
+        text: 'Here is the backup of my notes.',
+      );
 
-      if (context.mounted) {
+      if (result.status == ShareResultStatus.success && context.mounted) {
         showDialog(
           context: context,
           builder: (context) {

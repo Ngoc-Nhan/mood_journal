@@ -8,6 +8,7 @@ import 'package:mood_journal/components/color_picker.dart';
 import 'package:mood_journal/constants/mood_default.dart';
 import 'package:mood_journal/models/note_model.dart';
 import 'package:mood_journal/providers/note_provider.dart';
+import 'package:mood_journal/providers/settings_provider.dart';
 import 'package:mood_journal/screens/note_edit/template_question/tempalte_question.dart';
 import 'package:mood_journal/theme/app_colors.dart';
 import 'package:popover/popover.dart';
@@ -18,6 +19,14 @@ import 'package:image_picker/image_picker.dart';
 // YouTube
 import 'package:mood_journal/services/youtube_music.dart';
 import 'package:mood_journal/utils/youtube_launcher.dart';
+
+const Map<int, String> _moodMap = {
+  4: 'Vui vẻ',
+  3: 'Hào hứng',
+  2: 'Buồn',
+  1: 'Tức giận',
+  0: 'Lo lắng',
+};
 
 class NoteEditorScreen extends StatefulWidget {
   final NoteModel? note;
@@ -65,7 +74,9 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     _attachments = List.from(widget.note?.attachments ?? []);
     _aiResponse = widget.note?.aiResponse;
     _aiResponseCreatedAt = widget.note?.aiResponseCreatedAt;
-    _musicFuture = YouTubeService.searchMusic("nhạc chill chữa lành");
+    _musicFuture = YouTubeService.searchMusic(
+      "nhạc chill chữa lành cho tâm trạng ${_moodMap[_selectedMood]}",
+    );
   }
 
   @override
@@ -77,8 +88,25 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   }
 
   Future<bool> hasInternet() async {
-    final result = await Connectivity().checkConnectivity();
-    return result != ConnectivityResult.none;
+    try {
+      // Lớp 1: Kiểm tra phần cứng có bật kết nối không
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.none) {
+        return false;
+      }
+
+      // Lớp 2: Kiểm tra thực tế bằng cách "ping" một địa chỉ tin cậy
+      // lookup trả về danh sách địa chỉ IP, nếu rỗng nghĩa là không có internet thực sự
+      final result = await InternetAddress.lookup('google.com').timeout(
+        const Duration(seconds: 3),
+      ); // Thêm timeout để tránh chờ quá lâu
+
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } on SocketException catch (_) {
+      return false; // Lỗi này xảy ra khi không thể kết nối tới host
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> _saveNote() async {
@@ -111,11 +139,13 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
 
     try {
       if (widget.note == null && _aiResponse == null) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => Center(
-            child: Center(
+        // --- BƯỚC KIỂM TRA MẠNG Ở ĐÂY ---
+        bool isOnline = await hasInternet();
+        if (isOnline) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => Center(
               child: CircularProgressIndicator(),
 
               // Text(
@@ -123,22 +153,27 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
               //   style: TextStyle(fontSize: 16),
               // ),
             ),
-          ),
-        );
+          );
+          _musicFuture = YouTubeService.searchMusic(
+            "nhạc chill chữa lành cho tâm trạng ${_moodMap[_selectedMood]}",
+          );
+          // 1. Gọi SDK để lấy phản hồi AI
+          await noteProvider.generateAIAdvice(_contentController.text.trim());
+          if (mounted) {
+            Navigator.pop(context); // Tắt Loading
 
-        // 1. Gọi SDK để lấy phản hồi AI
-        await noteProvider.generateAIAdvice(_contentController.text.trim());
-
-        if (mounted) {
-          Navigator.pop(context); // Tắt Loading
-
-          // 2. Lấy dữ liệu từ Provider sau khi gọi xong
-          _aiResponse = noteProvider.lastAIResponse;
-          if (_aiResponse != null) {
-            _aiResponseCreatedAt =
-                DateTime.now(); // Ghi nhận thời gian tạo AI response
-            await _showAIResultPopup(context, _aiResponse!);
+            // 2. Lấy dữ liệu từ Provider sau khi gọi xong
+            _aiResponse = noteProvider.lastAIResponse;
+            if (_aiResponse != null) {
+              _aiResponseCreatedAt =
+                  DateTime.now(); // Ghi nhận thời gian tạo AI response
+              await _showAIResultPopup(context, _aiResponse!);
+            }
           }
+        } else {
+          // THÔNG BÁO: Nếu không có mạng, thông báo nhẹ cho người dùng
+          // nhưng vẫn cho phép code chạy tiếp để lưu Note vào máy
+          debugPrint("Offline mode: Skipping AI generation.");
         }
       }
       final note = NoteModel(
@@ -152,8 +187,8 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         tags: _tags,
         isPinned: widget.note?.isPinned ?? false,
         attachments: _attachments,
-        createdAt: _selectedDate,
-        modifiedAt: _selectedDate,
+        createdAt: widget.note?.createdAt ?? DateTime.now(),
+        modifiedAt: DateTime.now(),
         // Gán giá trị AI vào đây để lưu xuống DB
         aiResponse: _aiResponse ?? widget.note?.aiResponse,
         aiResponseCreatedAt:
@@ -198,12 +233,22 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         ),
         actions: [
           IconButton(
-            onPressed: () {
-              _showAIResultPopup(
-                context,
-                widget.note?.aiResponse ??
-                    'Mình luôn lắm nghe, hãy viết thêm nhiều nhé',
-              );
+            onPressed: () async {
+              final hasNet = await hasInternet();
+              final aiResponse = widget.note?.aiResponse ?? '';
+
+              if (!hasNet && aiResponse.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      "Cần kết nối mạng để xem phản hồi AI và nhạc",
+                    ),
+                  ),
+                );
+                return;
+              }
+
+              await _showAIResultPopup(context, aiResponse);
             },
             icon: Icon(Icons.message),
           ),
@@ -836,7 +881,8 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   //   );
   // }
   Future<void> _showAIResultPopup(BuildContext context, String response) async {
-    final online = await hasInternet();
+    if (!mounted) return;
+
     await showDialog(
       context: context,
       barrierDismissible: true,
@@ -886,38 +932,37 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (online)
-                          // AI MESSAGE
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Column(
-                                children: [
-                                  const Text(
-                                    "Liptwo",
-                                    style: TextStyle(
-                                      color: Colors.redAccent,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Image.asset(
-                                    'assets/images/shinba.png',
-                                    width: 50,
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  response,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    height: 1.4,
+                        // AI MESSAGE
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Column(
+                              children: [
+                                const Text(
+                                  "Liptwo",
+                                  style: TextStyle(
+                                    color: Colors.redAccent,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
+                                Image.asset(
+                                  'assets/images/shinba.png',
+                                  width: 50,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                response,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  height: 1.4,
+                                ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
+                        ),
 
                         const SizedBox(height: 20),
 

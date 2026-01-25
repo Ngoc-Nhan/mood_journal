@@ -8,6 +8,8 @@ class JournalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       height: 170,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -25,13 +27,17 @@ class JournalCard extends StatelessWidget {
                 children: [
                   Text(
                     prompt.title,
-                    style: const TextStyle(
+                    style: TextStyle(
+                      color: Colors.black,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(prompt.preview, style: const TextStyle(fontSize: 13)),
+                  Text(
+                    prompt.preview,
+                    style: TextStyle(color: Colors.black, fontSize: 13),
+                  ),
                   const Spacer(),
                   Row(
                     children: [

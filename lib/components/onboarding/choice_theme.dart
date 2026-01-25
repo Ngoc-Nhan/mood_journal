@@ -41,6 +41,8 @@ class _ChoiceThemeState extends State<ChoiceTheme> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return OnboardingLayout(
       title: 'Choose \nYour Background',
       subtitle: 'You can change later',
@@ -57,7 +59,10 @@ class _ChoiceThemeState extends State<ChoiceTheme> {
           height: 50,
           child: OutlinedButton(
             onPressed: _onSkip, // Bỏ qua không lưu
-            child: const Text('Skip', style: TextStyle(color: Colors.black)),
+            child: Text(
+              'Skip',
+              style: TextStyle(color: isDark ? Colors.white : Colors.black),
+            ),
           ),
         ),
       ),

@@ -205,10 +205,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeaderStack(bgImage, isDark, settings) {
-    // final isDark = Theme.of(context).brightness == Bri
-    // ghtness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final userName = context.watch<SettingsProvider>().userName;
-    // khoi tao streak
     final streak = settings.streak;
 
     return Stack(

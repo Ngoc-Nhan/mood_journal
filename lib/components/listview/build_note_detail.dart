@@ -123,7 +123,7 @@ class _BuildNoteDetailState extends State<BuildNoteDetail> {
                     widget.note.content,
                     maxLines: 5,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleSmall,
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   if (widget.note.tags.isNotEmpty) ...[
                     SizedBox(height: 8),

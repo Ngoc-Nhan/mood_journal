@@ -129,8 +129,16 @@ class _PinLoginPageState extends State<PinLoginPage> {
           });
         }
       },
-      child: Center(
-        child: Text(number.toString(), style: const TextStyle(fontSize: 22)),
+      child: Container(
+        decoration: BoxDecoration(
+          // color: Colors.white,
+          border: Border.all(color: Colors.pink),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Center(
+          child: Text(number.toString(), style: const TextStyle(fontSize: 22)),
+        ),
       ),
     );
   }

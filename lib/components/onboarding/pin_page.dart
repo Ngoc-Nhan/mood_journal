@@ -60,8 +60,16 @@ class _PinPageState extends State<PinPage> {
           setState(() => pin.add(number));
         }
       },
-      child: Center(
-        child: Text(number.toString(), style: const TextStyle(fontSize: 22)),
+      child: Container(
+        decoration: BoxDecoration(
+          // color: Colors.white,
+          border: Border.all(color: Colors.pink),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Center(
+          child: Text(number.toString(), style: const TextStyle(fontSize: 22)),
+        ),
       ),
     );
   }
@@ -98,6 +106,8 @@ class _PinPageState extends State<PinPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return OnboardingLayout(
       title: 'Password (PIN)',
       subtitle: 'Let enter password to protect your note',
@@ -135,7 +145,10 @@ class _PinPageState extends State<PinPage> {
                 MaterialPageRoute(builder: (_) => WelcomePage()),
               );
             },
-            child: Text('Skip', style: TextStyle(color: Colors.black)),
+            child: Text(
+              'Skip',
+              style: TextStyle(color: isDark ? Colors.white : Colors.black),
+            ),
           ),
         ),
       ),

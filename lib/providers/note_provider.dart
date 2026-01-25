@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:mood_journal/models/note_model.dart';
 import 'package:mood_journal/models/tag_model.dart';
+import 'package:mood_journal/providers/settings_provider.dart';
 import 'package:mood_journal/repository/note_repository.dart';
 import 'package:intl/intl.dart';
 
@@ -153,7 +154,7 @@ class NoteProvider extends ChangeNotifier {
 
     for (var note in allNotes) {
       // Dùng định dạng ngày làm Key (VD: "15/01/2026")
-      String dateKey = DateFormat('dd/MM/yyyy').format(note.createdAt);
+      String dateKey = DateFormat('dd/MM/yyyy').format(note.modifiedAt);
       if (groups[dateKey] == null) groups[dateKey] = [];
       groups[dateKey]!.add(note);
     }

@@ -249,6 +249,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     );
                   }
                   return ListView.builder(
+                    padding: EdgeInsets.all(8),
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: value.length,

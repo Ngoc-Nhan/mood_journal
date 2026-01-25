@@ -86,7 +86,11 @@ class SettingsProvider extends ChangeNotifier {
 
     if (lastActiveStr != null) {
       final lastActive = DateTime.parse(lastActiveStr);
-      final lastDate = DateTime(lastActive.year, lastActive.month, lastActive.day);
+      final lastDate = DateTime(
+        lastActive.year,
+        lastActive.month,
+        lastActive.day,
+      );
 
       final diff = today.difference(lastDate).inDays;
 
